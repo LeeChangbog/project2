@@ -1,50 +1,124 @@
-# Welcome to your Expo app 👋
+# 사주문어 (SajuMonooApp) 🔮
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+사주 팔자를 기반으로 한 궁합 분석 모바일 앱입니다. 두 사람의 생년월일시, 이름, 성별을 입력받아 궁합 점수를 계산하고 시각화합니다.
 
-## Get started
+## 주요 기능
 
-1. Install dependencies
+- 📱 **크로스 플랫폼**: 웹, iOS, Android 지원
+- 🔮 **사주 궁합 계산**: 생년월일시, 이름, 성별을 기반으로 궁합 점수 계산
+- 📊 **팔각형 방사형 그래프**: 8개 '살' 요소를 시각화
+- 💡 **살 설명**: 각 살에 대한 상세 설명 제공
+- 🎨 **전통 사주 디자인**: 사주 팔자에 어울리는 디자인
 
-   ```bash
-   npm install
-   ```
+## 기술 스택
 
-2. Start the app
+- **프레임워크**: Expo SDK 54 + React Native 0.81.5
+- **언어**: TypeScript 5.9.2
+- **라우팅**: Expo Router 6.0 (파일 기반)
+- **상태 관리**: React Context API
+- **그래프**: react-native-svg
 
-   ```bash
-   npx expo start
-   ```
+## 설치 및 실행
 
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+### 1. 의존성 설치
 
 ```bash
-npm run reset-project
+npm install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### 2. 앱 실행
 
-## Learn more
+```bash
+# 개발 서버 시작
+npm start
 
-To learn more about developing your project with Expo, look at the following resources:
+# 웹에서 실행
+npm run web
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+# iOS에서 실행
+npm run ios
 
-## Join the community
+# Android에서 실행
+npm run android
+```
 
-Join our community of developers creating universal apps.
+### 3. 캐시 초기화 (필요시)
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```bash
+# 캐시 초기화 후 시작
+npm run start:clear
+
+# 웹 캐시 초기화
+npm run web:clear
+```
+
+## 프로젝트 구조
+
+```
+SajuMonooApp/
+├── app/                    # 화면 파일들
+│   ├── (tabs)/            # 탭 네비게이션
+│   │   └── index.tsx     # 홈 화면
+│   ├── input.tsx          # 이용자 정보 입력 화면
+│   ├── loading.tsx        # 로딩 화면
+│   └── result.tsx        # 궁합 결과 화면
+├── components/            # 재사용 가능한 컴포넌트
+│   ├── AppHeader.tsx     # 앱 헤더 (상단 고정)
+│   ├── OctagonGraph.tsx  # 팔각형 방사형 그래프
+│   ├── DatePicker.tsx    # 날짜 선택 컴포넌트
+│   └── TimePicker.tsx    # 시간 선택 컴포넌트
+├── contexts/              # 전역 상태 관리
+│   └── UserDataContext.tsx
+├── utils/                 # 유틸리티 함수
+│   └── sajuCalculator.ts # 사주 계산 로직
+└── constants/             # 상수 정의
+    └── theme.ts          # 테마 색상
+```
+
+## 기능 설명
+
+### 1. 홈 화면
+- 앱 소개 및 예시 결과 표시
+- '사주 궁합 보기' 버튼으로 입력 화면 이동
+
+### 2. 이용자 정보 입력 화면
+- 두 명의 이용자 정보 입력
+  - 이름: 한글만 입력 가능
+  - 생년월일: YYYY-MM-DD 형식
+  - 생시: HH:MM 형식
+  - 성별: 남/여 선택
+
+### 3. 로딩 화면
+- 사주 궁합 계산 수행
+- 계산 완료 후 결과 화면으로 자동 이동
+
+### 4. 궁합 결과 화면
+- 궁합 점수 (0-100점)
+- 두 이용자의 사주 정보 표시
+- 팔각형 방사형 그래프로 8개 '살' 시각화
+- 각 살에 대한 설명 툴팁
+
+## 사주 계산 방식
+
+### 감점 요소
+- **살(煞)**: 충살, 형살, 파살, 해살 등
+  - 각 살당 10점 감점
+- **오행 상극**: 상극 관계당 2점 감점
+- **이름 오행 상극**: 2점 감점
+
+### 가점 요소
+- **오행 상생**: 상생 관계당 1점 가점 (최대 10점)
+- **성별 조합**: 이성 조합 시 5점 가점
+- **음양 조화**: 일간과 성별의 음양 조화
+- **이름 오행 상생**: 3점 가점
+- **이름 획수 차이**: 획수 차이가 5 이하일 때 2점 가점
+
+## 개발 환경
+
+- Node.js
+- npm 또는 yarn
+- Expo Go (모바일 테스트용)
+
+## 라이선스
+
+이 프로젝트는 개인 프로젝트입니다.
