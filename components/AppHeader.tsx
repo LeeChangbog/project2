@@ -50,9 +50,9 @@ export function AppHeader({ title, showHomeButton = true, showAuthButtons = fals
             <IconSymbol name="house.fill" size={22} color={tintColor} />
           </TouchableOpacity>
         )}
-        {/* 앱 이름: '사주문어' */}
+        {/* 앱 이름: '궁합문어' (로고 역할) */}
         <ThemedText type="title" style={styles.appName}>
-          사주문어
+          궁합문어
         </ThemedText>
         {/* 페이지 제목: title이 제공된 경우에만 표시 */}
         {title && (

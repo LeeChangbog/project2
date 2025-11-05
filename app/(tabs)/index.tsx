@@ -2,7 +2,7 @@
  * 홈 화면 (메인 화면)
  * - 앱 진입 시 처음 보이는 화면
  * - '사주 궁합 보기' 버튼으로 입력 화면으로 이동
- * - 사주풀이 결과 예시와 '살'에 대한 설명 표시
+ * - '살'에 대한 상세한 설명 표시
  */
 import { AppHeader } from '@/components/AppHeader';
 import { ThemedText } from '@/components/themed-text';
@@ -25,9 +25,9 @@ export default function HomeScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}>
         <ThemedView style={styles.content}>
-          {/* 앱 제목 */}
+          {/* 앱 제목 (로고 역할) */}
           <ThemedView style={styles.titleContainer}>
-            <ThemedText type="title">사주 궁합</ThemedText>
+            <ThemedText type="title">궁합문어</ThemedText>
           </ThemedView>
 
           {/* 메인 버튼: 입력 화면으로 이동 */}
@@ -39,32 +39,65 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </ThemedView>
 
-          {/* 예시 섹션: 결과 예시와 설명 */}
-          <ThemedView style={styles.exampleSection}>
-            <ThemedText type="subtitle" style={styles.sectionTitle}>
-              사주풀이 결과 예시
+          {/* '살'에 대한 설명 */}
+          <ThemedView style={styles.salExplanation}>
+            <ThemedText type="subtitle" style={styles.explanationTitle}>
+              궁합에서의 '살'이란?
             </ThemedText>
-            {/* 예시 결과 박스 */}
-            <ThemedView style={styles.exampleBox}>
-              <ThemedView style={styles.exampleScore}>
-                <ThemedText type="title" style={styles.scoreText}>85점</ThemedText>
-                <ThemedText style={styles.scoreLabel}>궁합 점수</ThemedText>
+            <ThemedText style={styles.explanationText}>
+              사주에서 '살'은 두 사람 간의 관계에서 나타나는 충돌, 갈등, 또는 부조화를 나타내는 요소입니다. 
+              각종 살이 많을수록 궁합 점수가 낮아지며, 관계에서 어려움이 발생할 가능성이 높아집니다.
+            </ThemedText>
+            
+            <ThemedView style={styles.salTypesContainer}>
+              <ThemedText type="subtitle" style={styles.salTypeTitle}>
+                주요 살의 종류
+              </ThemedText>
+              
+              <ThemedView style={styles.salTypeItem}>
+                <ThemedText style={styles.salTypeName}>• 충살 (衝殺)</ThemedText>
+                <ThemedText style={styles.salTypeDescription}>
+                  서로 반대되는 지지 관계로, 대립하고 충돌하는 기운입니다. 의견 차이와 갈등이 자주 발생할 수 있습니다.
+                </ThemedText>
               </ThemedView>
-              <ThemedView style={styles.exampleGraph}>
-                <ThemedText style={styles.exampleDescription}>
-                  팔각형 방사형 그래프로 감점 요소를 표시합니다
+
+              <ThemedView style={styles.salTypeItem}>
+                <ThemedText style={styles.salTypeName}>• 형살 (刑殺)</ThemedText>
+                <ThemedText style={styles.salTypeDescription}>
+                  형벌 관계로, 서로를 구속하고 제압하는 기운입니다. 상호간의 충돌과 다툼을 나타냅니다.
+                </ThemedText>
+              </ThemedView>
+
+              <ThemedView style={styles.salTypeItem}>
+                <ThemedText style={styles.salTypeName}>• 파살 (破殺)</ThemedText>
+                <ThemedText style={styles.salTypeDescription}>
+                  파괴 관계로, 관계의 불안정성을 나타냅니다. 불화와 분열의 원인이 될 수 있습니다.
+                </ThemedText>
+              </ThemedView>
+
+              <ThemedView style={styles.salTypeItem}>
+                <ThemedText style={styles.salTypeName}>• 해살 (害殺)</ThemedText>
+                <ThemedText style={styles.salTypeDescription}>
+                  해로움 관계로, 서로에게 해를 끼치는 요소입니다. 신뢰 관계에 손상을 줄 수 있습니다.
                 </ThemedText>
               </ThemedView>
             </ThemedView>
 
-            {/* '살'에 대한 설명 */}
-            <ThemedView style={styles.salExplanation}>
-              <ThemedText type="subtitle" style={styles.explanationTitle}>
-                감점요소 '살'이란?
+            <ThemedView style={styles.salCombination}>
+              <ThemedText type="subtitle" style={styles.salCombinationTitle}>
+                조합된 살
               </ThemedText>
-              <ThemedText style={styles.explanationText}>
-                사주에서 '살'은 상호간의 충돌이나 갈등을 나타내는 요소입니다.{'\n'}
-                각종 살(형살, 충살, 파살 등)이 많을수록 궁합 점수가 낮아집니다.
+              <ThemedText style={styles.salCombinationText}>
+                위의 4가지 기본 살이 여러 개 동시에 나타나면 조합된 살로 나타납니다. 
+                예를 들어 충살과 형살이 함께 있으면 '충형살', 파살과 해살이 함께 있으면 '파해살' 등으로 표시되며, 
+                이러한 조합된 살은 더 큰 감점 요인이 될 수 있습니다.
+              </ThemedText>
+            </ThemedView>
+
+            <ThemedView style={styles.salConclusion}>
+              <ThemedText style={styles.conclusionText}>
+                이러한 살들이 많을수록 궁합 점수에 감점이 적용되며, 
+                실제 관계에서도 이러한 부분들을 이해하고 서로 배려하는 것이 중요합니다.
               </ThemedText>
             </ThemedView>
           </ThemedView>
@@ -119,62 +152,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 1,
   },
-  exampleSection: {
-    gap: 20,
-    marginTop: 20,
-  },
-  sectionTitle: {
-    marginBottom: 10,
-  },
-  exampleBox: {
-    borderWidth: 2,
-    borderColor: '#D4C4B0',
-    borderRadius: 20,
-    padding: 24,
-    gap: 20,
-    backgroundColor: '#FFF8F0',
-    shadowColor: '#E8D5C4',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 3,
-    ...Platform.select({
-      web: {
-        borderColor: '#D4C4B0',
-        boxShadow: '0 2px 8px rgba(232, 213, 196, 0.2)',
-      },
-      default: {
-        borderColor: '#D4C4B0',
-      },
-    }),
-  },
-  exampleScore: {
-    alignItems: 'center',
-    paddingVertical: 20,
-  },
-  scoreText: {
-    fontSize: 52,
-    fontWeight: 'bold',
-    color: '#A0522D',
-    letterSpacing: 2,
-  },
-  scoreLabel: {
-    fontSize: 16,
-    marginTop: 8,
-    opacity: 0.8,
-    color: '#8B6F47',
-  },
-  exampleGraph: {
-    alignItems: 'center',
-    paddingVertical: 20,
-  },
-  exampleDescription: {
-    textAlign: 'center',
-    lineHeight: 24,
-    color: '#6B5B47',
-  },
   salExplanation: {
-    marginTop: 10,
+    marginTop: 20,
     padding: 24,
     backgroundColor: '#FFF8F0',
     borderRadius: 16,
@@ -191,12 +170,70 @@ const styles = StyleSheet.create({
     }),
   },
   explanationTitle: {
-    marginBottom: 12,
+    marginBottom: 16,
     color: '#8B6F47',
+    fontSize: 20,
+    fontWeight: '700',
   },
   explanationText: {
     lineHeight: 26,
     fontSize: 15,
     color: '#6B5B47',
+    marginBottom: 20,
+  },
+  salTypesContainer: {
+    marginTop: 20,
+    gap: 16,
+  },
+  salTypeTitle: {
+    marginBottom: 12,
+    color: '#8B6F47',
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  salTypeItem: {
+    marginBottom: 16,
+    paddingLeft: 8,
+  },
+  salTypeName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#A0522D',
+    marginBottom: 6,
+  },
+  salTypeDescription: {
+    fontSize: 14,
+    lineHeight: 22,
+    color: '#6B5B47',
+    paddingLeft: 8,
+  },
+  salCombination: {
+    marginTop: 24,
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#E8D5C4',
+  },
+  salCombinationTitle: {
+    marginBottom: 12,
+    color: '#8B6F47',
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  salCombinationText: {
+    fontSize: 14,
+    lineHeight: 22,
+    color: '#6B5B47',
+  },
+  salConclusion: {
+    marginTop: 20,
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#E8D5C4',
+  },
+  conclusionText: {
+    fontSize: 15,
+    lineHeight: 26,
+    color: '#6B5B47',
+    fontStyle: 'italic',
   },
 });
