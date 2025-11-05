@@ -8,6 +8,9 @@
 - 🔮 **사주 궁합 계산**: 생년월일시, 이름, 성별을 기반으로 궁합 점수 계산
 - 📊 **팔각형 방사형 그래프**: 8개 '살' 요소를 시각화
 - 💡 **살 설명**: 각 살에 대한 상세 설명 제공
+- 🤖 **AI 조언**: OpenAI API를 활용한 개인화된 궁합 조언
+- 👤 **로그인/회원가입**: 사용자 인증 및 프로필 관리
+- 💾 **프로필 저장**: 내 정보 저장 및 자동 불러오기
 - 🎨 **전통 사주 디자인**: 사주 팔자에 어울리는 디자인
 
 ## 기술 스택
@@ -152,23 +155,47 @@ npm run web:clear
 
 ```
 SajuMonooApp/
-├── app/                    # 화면 파일들
+├── app/                    # 화면 파일들 (Expo Router 파일 기반 라우팅)
 │   ├── (tabs)/            # 탭 네비게이션
 │   │   └── index.tsx     # 홈 화면
+│   ├── _layout.tsx        # 루트 레이아웃 (Provider 설정)
 │   ├── input.tsx          # 이용자 정보 입력 화면
-│   ├── loading.tsx        # 로딩 화면
-│   └── result.tsx        # 궁합 결과 화면
+│   ├── loading.tsx        # 로딩 화면 (사주 계산 중)
+│   ├── result.tsx        # 궁합 결과 화면
+│   ├── ai-advice.tsx     # AI 조언 화면
+│   ├── login.tsx          # 로그인 화면
+│   ├── signup.tsx         # 회원가입 화면
+│   ├── profile.tsx        # 내 정보 화면 (프로필 설정)
+│   └── modal.tsx          # 모달 화면 (예시)
 ├── components/            # 재사용 가능한 컴포넌트
-│   ├── AppHeader.tsx     # 앱 헤더 (상단 고정)
-│   ├── OctagonGraph.tsx  # 팔각형 방사형 그래프
-│   ├── DatePicker.tsx    # 날짜 선택 컴포넌트
-│   └── TimePicker.tsx    # 시간 선택 컴포넌트
-├── contexts/              # 전역 상태 관리
-│   └── UserDataContext.tsx
+│   ├── AppHeader.tsx     # 앱 헤더 (상단 고정, 로그인 상태 표시)
+│   ├── OctagonGraph.tsx  # 팔각형 방사형 그래프 (8개 살 시각화)
+│   ├── DatePicker.tsx    # 날짜 선택 컴포넌트 (웹/모바일 대응)
+│   ├── TimePicker.tsx    # 시간 선택 컴포넌트 (웹/모바일 대응)
+│   ├── themed-text.tsx   # 테마 적용 텍스트 컴포넌트
+│   ├── themed-view.tsx   # 테마 적용 뷰 컴포넌트
+│   └── ui/               # UI 컴포넌트
+│       ├── icon-symbol.tsx      # 플랫폼별 아이콘 컴포넌트
+│       └── icon-symbol.ios.tsx  # iOS 전용 아이콘 컴포넌트
+├── contexts/              # 전역 상태 관리 (Context API)
+│   ├── UserDataContext.tsx     # 사용자 입력 데이터 및 궁합 결과
+│   └── AuthContext.tsx         # 인증 상태 및 사용자 정보
 ├── utils/                 # 유틸리티 함수
-│   └── sajuCalculator.ts # 사주 계산 로직
-└── constants/             # 상수 정의
-    └── theme.ts          # 테마 색상
+│   ├── sajuCalculator.ts # 사주 계산 로직 (간지 변환, 살 분석, 점수 계산)
+│   └── aiService.ts      # AI 조언 서비스 (OpenAI API 연동)
+├── constants/             # 상수 정의
+│   └── theme.ts          # 테마 색상 및 스타일
+├── hooks/                 # 커스텀 훅
+│   ├── use-color-scheme.ts    # 다크/라이트 모드 감지
+│   └── use-theme-color.ts     # 테마 색상 가져오기
+├── assets/                # 이미지 및 리소스
+│   └── images/           # 앱 아이콘 및 이미지
+├── scripts/               # 스크립트 파일
+│   └── reset-project.js  # 프로젝트 초기화 스크립트
+├── AI_SETUP.md           # AI 조언 기능 설정 가이드
+├── BACKEND_API_GUIDE.md  # 백엔드 API 연동 가이드
+├── AI_ROLE_EXPLANATION.md # AI API 역할 설명
+└── README.md             # 프로젝트 설명서
 ```
 
 ## 기능 설명
@@ -176,23 +203,42 @@ SajuMonooApp/
 ### 1. 홈 화면
 - 앱 소개 및 예시 결과 표시
 - '사주 궁합 보기' 버튼으로 입력 화면 이동
+- 로그인/회원가입 버튼 (우상단) 또는 내 정보/로그아웃 버튼
 
-### 2. 이용자 정보 입력 화면
+### 2. 로그인/회원가입
+- 이메일과 비밀번호로 계정 생성 및 로그인
+- 로그인 성공 시 프로필 관리 가능
+- 로그인 상태에 따라 헤더 버튼 자동 변경
+
+### 3. 내 정보 화면
+- 프로필 정보 저장 (이름, 생년월일, 생시, 성별)
+- 저장된 정보는 궁합 입력 시 자동으로 불러올 수 있음
+- '내 정보 불러오기' 버튼으로 편리하게 사용
+
+### 4. 이용자 정보 입력 화면
 - 두 명의 이용자 정보 입력
   - 이름: 한글만 입력 가능
   - 생년월일: YYYY-MM-DD 형식
   - 생시: HH:MM 형식
   - 성별: 남/여 선택
+- 사용자1 옆 '내 정보 불러오기' 버튼 (로그인 시 사용 가능)
 
-### 3. 로딩 화면
+### 5. 로딩 화면
 - 사주 궁합 계산 수행
 - 계산 완료 후 결과 화면으로 자동 이동
 
-### 4. 궁합 결과 화면
+### 6. 궁합 결과 화면
 - 궁합 점수 (0-100점)
 - 두 이용자의 사주 정보 표시
 - 팔각형 방사형 그래프로 8개 '살' 시각화
 - 각 살에 대한 설명 툴팁
+- 'AI 조언 받으러가기' 버튼
+
+### 7. AI 조언 화면
+- OpenAI API를 활용한 개인화된 궁합 조언
+- 계산 결과를 바탕으로 실용적인 조언 제공
+- 구체적인 팁 및 요약 제공
+- 백엔드 API 연동 지원 (설정 가능)
 
 ## 사주 계산 방식
 
@@ -209,11 +255,30 @@ SajuMonooApp/
 - **이름 오행 상생**: 3점 가점
 - **이름 획수 차이**: 획수 차이가 5 이하일 때 2점 가점
 
+## 추가 기능
+
+### AI 조언 기능
+- OpenAI API를 사용한 개인화된 조언 (선택사항)
+- API 키 없이도 기본 조언 제공
+- 백엔드 API 연동 지원
+- 상세한 설정 가이드는 [AI_SETUP.md](./AI_SETUP.md) 참고
+
+### 백엔드 API 연동
+- 백엔드 API 연동을 위한 틀 제공
+- 환경 변수로 간단하게 전환 가능
+- 상세한 가이드는 [BACKEND_API_GUIDE.md](./BACKEND_API_GUIDE.md) 참고
+
 ## 개발 환경
 
-- Node.js
+- Node.js (18 이상 권장)
 - npm 또는 yarn
 - Expo Go (모바일 테스트용)
+
+## 문서
+
+- [AI_SETUP.md](./AI_SETUP.md) - AI 조언 기능 설정 가이드
+- [BACKEND_API_GUIDE.md](./BACKEND_API_GUIDE.md) - 백엔드 API 연동 가이드
+- [AI_ROLE_EXPLANATION.md](./AI_ROLE_EXPLANATION.md) - AI API 역할 설명
 
 ## 라이선스
 
