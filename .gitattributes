@@ -1,0 +1,17 @@
+# 모든 텍스트 파일을 UTF-8로 처리
+* text=auto eol=lf
+*.md text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.js text eol=lf
+*.jsx text eol=lf
+*.json text eol=lf
+
+# 바이너리 파일은 그대로 유지
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+
