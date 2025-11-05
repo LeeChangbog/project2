@@ -17,9 +17,10 @@ import { IconSymbol } from './ui/icon-symbol';
 interface AppHeaderProps {
   title?: string;              // 페이지 제목 (선택적)
   showHomeButton?: boolean;    // 홈 버튼 표시 여부 (기본값: true)
+  showAuthButtons?: boolean;   // 로그인/회원가입 버튼 표시 여부 (기본값: false)
 }
 
-export function AppHeader({ title, showHomeButton = true }: AppHeaderProps) {
+export function AppHeader({ title, showHomeButton = true, showAuthButtons = false }: AppHeaderProps) {
   const router = useRouter();
   const pathname = usePathname();
   const colorScheme = useColorScheme();
@@ -49,6 +50,39 @@ export function AppHeader({ title, showHomeButton = true }: AppHeaderProps) {
           <ThemedText style={styles.pageTitle} numberOfLines={1}>
             {title}
           </ThemedText>
+        )}
+        {/* 로그인/회원가입 버튼: 홈 화면이고 showAuthButtons가 true일 때 표시 */}
+        {showAuthButtons && isHome && (
+          <ThemedView style={styles.authButtonsContainer}>
+            <TouchableOpacity
+              style={[
+                styles.authButton,
+                Platform.select({
+                  web: {
+                    cursor: 'pointer',
+                  },
+                }),
+              ]}
+              onPress={() => router.push('/login')}>
+              <ThemedText style={styles.authButtonText}>로그인</ThemedText>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.authButton,
+                styles.signupButton,
+                { borderColor: tintColor },
+                Platform.select({
+                  web: {
+                    cursor: 'pointer',
+                  },
+                }),
+              ]}
+              onPress={() => router.push('/signup')}>
+              <ThemedText style={[styles.authButtonText, { color: tintColor }]}>
+                회원가입
+              </ThemedText>
+            </TouchableOpacity>
+          </ThemedView>
         )}
       </ThemedView>
     </ThemedView>
@@ -103,6 +137,33 @@ const styles = StyleSheet.create({
     color: '#8B6F47',
     flex: 1,
     marginLeft: 8,
+  },
+  authButtonsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginLeft: 'auto',
+  },
+  authButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: '#D4C4B0',
+    backgroundColor: '#FFFFFF',
+    ...Platform.select({
+      web: {
+        cursor: 'pointer',
+      },
+    }),
+  },
+  signupButton: {
+    backgroundColor: 'transparent',
+  },
+  authButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#8B6F47',
   },
 });
 

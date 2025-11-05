@@ -19,8 +19,8 @@ export default function HomeScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      {/* 상단 헤더: '사주문어' 앱 이름 표시 */}
-      <AppHeader showHomeButton={false} />
+      {/* 상단 헤더: '사주문어' 앱 이름 표시, 로그인/회원가입 버튼 */}
+      <AppHeader showHomeButton={false} showAuthButtons={true} />
       <ScrollView 
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}>

@@ -148,6 +148,13 @@ export default function ResultScreen() {
             <OctagonGraph salData={salData} />
           </ThemedView>
 
+          {/* AI 조언 버튼 */}
+          <TouchableOpacity
+            style={[styles.aiButton, { backgroundColor: tintColor }]}
+            onPress={() => router.push('/ai-advice')}>
+            <ThemedText style={styles.aiButtonText}>🤖 AI 조언 받으러가기</ThemedText>
+          </TouchableOpacity>
+
           {/* 결과 확인 버튼 */}
           <TouchableOpacity
             style={[styles.completeButton, { backgroundColor: tintColor }]}
@@ -244,11 +251,34 @@ const styles = StyleSheet.create({
   graphSection: {
     gap: 20,
   },
-  completeButton: {
+  aiButton: {
     paddingVertical: 18,
     borderRadius: 30,
     alignItems: 'center',
     marginTop: 20,
+    shadowColor: '#8B6F47',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
+    ...Platform.select({
+      web: {
+        cursor: 'pointer',
+        boxShadow: '0 4px 12px rgba(139, 111, 71, 0.3)',
+      },
+    }),
+  },
+  aiButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '700',
+    letterSpacing: 1,
+  },
+  completeButton: {
+    paddingVertical: 18,
+    borderRadius: 30,
+    alignItems: 'center',
+    marginTop: 12,
     shadowColor: '#8B6F47',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
