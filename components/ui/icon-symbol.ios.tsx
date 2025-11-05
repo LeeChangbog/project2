@@ -1,5 +1,15 @@
-import { SymbolView, SymbolViewProps, SymbolWeight } from 'expo-symbols';
-import { StyleProp, ViewStyle } from 'react-native';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { ComponentProps } from 'react';
+import { StyleProp, TextStyle } from 'react-native';
+
+// SF Symbols to Material Icons mapping for iOS
+const MAPPING: Record<string, ComponentProps<typeof MaterialIcons>['name']> = {
+  'house.fill': 'home',
+  'paperplane.fill': 'send',
+  'chevron.left.forwardslash.chevron.right': 'code',
+  'chevron.right': 'chevron-right',
+  'info.circle': 'info',
+};
 
 export function IconSymbol({
   name,
@@ -8,25 +18,13 @@ export function IconSymbol({
   style,
   weight = 'regular',
 }: {
-  name: SymbolViewProps['name'];
+  name: keyof typeof MAPPING;
   size?: number;
   color: string;
-  style?: StyleProp<ViewStyle>;
-  weight?: SymbolWeight;
+  style?: StyleProp<TextStyle>;
+  weight?: string;
 }) {
-  return (
-    <SymbolView
-      weight={weight}
-      tintColor={color}
-      resizeMode="scaleAspectFit"
-      name={name}
-      style={[
-        {
-          width: size,
-          height: size,
-        },
-        style,
-      ]}
-    />
-  );
+  // iOS에서도 MaterialIcons를 사용하여 일관성 유지
+  const iconName = MAPPING[name] || 'help-outline';
+  return <MaterialIcons color={color} size={size} name={iconName} style={style} />;
 }

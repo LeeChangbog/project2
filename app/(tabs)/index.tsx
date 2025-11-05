@@ -1,98 +1,202 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
+/**
+ * 홈 화면 (메인 화면)
+ * - 앱 진입 시 처음 보이는 화면
+ * - '사주 궁합 보기' 버튼으로 입력 화면으로 이동
+ * - 사주풀이 결과 예시와 '살'에 대한 설명 표시
+ */
+import { AppHeader } from '@/components/AppHeader';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { Colors } from '@/constants/theme';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useRouter } from 'expo-router';
+import { Platform, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const router = useRouter();
+  const colorScheme = useColorScheme();
+  const tintColor = Colors[colorScheme ?? 'light'].tint;
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  return (
+    <ThemedView style={styles.container}>
+      {/* 상단 헤더: '사주문어' 앱 이름 표시 */}
+      <AppHeader showHomeButton={false} />
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}>
+        <ThemedView style={styles.content}>
+          {/* 앱 제목 */}
+          <ThemedView style={styles.titleContainer}>
+            <ThemedText type="title">사주 궁합</ThemedText>
+          </ThemedView>
+
+          {/* 메인 버튼: 입력 화면으로 이동 */}
+          <ThemedView style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={[styles.primaryButton, { backgroundColor: tintColor }]}
+              onPress={() => router.push('/input')}>
+              <ThemedText style={styles.buttonText}>사주 궁합 보기</ThemedText>
+            </TouchableOpacity>
+          </ThemedView>
+
+          {/* 예시 섹션: 결과 예시와 설명 */}
+          <ThemedView style={styles.exampleSection}>
+            <ThemedText type="subtitle" style={styles.sectionTitle}>
+              사주풀이 결과 예시
+            </ThemedText>
+            {/* 예시 결과 박스 */}
+            <ThemedView style={styles.exampleBox}>
+              <ThemedView style={styles.exampleScore}>
+                <ThemedText type="title" style={styles.scoreText}>85점</ThemedText>
+                <ThemedText style={styles.scoreLabel}>궁합 점수</ThemedText>
+              </ThemedView>
+              <ThemedView style={styles.exampleGraph}>
+                <ThemedText style={styles.exampleDescription}>
+                  팔각형 방사형 그래프로 감점 요소를 표시합니다
+                </ThemedText>
+              </ThemedView>
+            </ThemedView>
+
+            {/* '살'에 대한 설명 */}
+            <ThemedView style={styles.salExplanation}>
+              <ThemedText type="subtitle" style={styles.explanationTitle}>
+                감점요소 '살'이란?
+              </ThemedText>
+              <ThemedText style={styles.explanationText}>
+                사주에서 '살'은 상호간의 충돌이나 갈등을 나타내는 요소입니다.{'\n'}
+                각종 살(형살, 충살, 파살 등)이 많을수록 궁합 점수가 낮아집니다.
+              </ThemedText>
+            </ThemedView>
+          </ThemedView>
+        </ThemedView>
+      </ScrollView>
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+  },
+  content: {
+    flex: 1,
+    padding: 20,
+    gap: 30,
+  },
   titleContainer: {
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    marginTop: 20,
+    marginBottom: 10,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  buttonContainer: {
+    alignItems: 'center',
+    marginVertical: 20,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  primaryButton: {
+    paddingVertical: 18,
+    paddingHorizontal: 50,
+    borderRadius: 30,
+    minWidth: 220,
+    alignItems: 'center',
+    shadowColor: '#8B6F47',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
+    ...Platform.select({
+      web: {
+        cursor: 'pointer',
+        boxShadow: '0 4px 12px rgba(139, 111, 71, 0.3)',
+      },
+    }),
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '700',
+    letterSpacing: 1,
+  },
+  exampleSection: {
+    gap: 20,
+    marginTop: 20,
+  },
+  sectionTitle: {
+    marginBottom: 10,
+  },
+  exampleBox: {
+    borderWidth: 2,
+    borderColor: '#D4C4B0',
+    borderRadius: 20,
+    padding: 24,
+    gap: 20,
+    backgroundColor: '#FFF8F0',
+    shadowColor: '#E8D5C4',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 3,
+    ...Platform.select({
+      web: {
+        borderColor: '#D4C4B0',
+        boxShadow: '0 2px 8px rgba(232, 213, 196, 0.2)',
+      },
+      default: {
+        borderColor: '#D4C4B0',
+      },
+    }),
+  },
+  exampleScore: {
+    alignItems: 'center',
+    paddingVertical: 20,
+  },
+  scoreText: {
+    fontSize: 52,
+    fontWeight: 'bold',
+    color: '#A0522D',
+    letterSpacing: 2,
+  },
+  scoreLabel: {
+    fontSize: 16,
+    marginTop: 8,
+    opacity: 0.8,
+    color: '#8B6F47',
+  },
+  exampleGraph: {
+    alignItems: 'center',
+    paddingVertical: 20,
+  },
+  exampleDescription: {
+    textAlign: 'center',
+    lineHeight: 24,
+    color: '#6B5B47',
+  },
+  salExplanation: {
+    marginTop: 10,
+    padding: 24,
+    backgroundColor: '#FFF8F0',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E8D5C4',
+    ...Platform.select({
+      web: {
+        backgroundColor: '#FFF8F0',
+        boxShadow: '0 2px 6px rgba(232, 213, 196, 0.15)',
+      },
+      default: {
+        backgroundColor: '#FFF8F0',
+      },
+    }),
+  },
+  explanationTitle: {
+    marginBottom: 12,
+    color: '#8B6F47',
+  },
+  explanationText: {
+    lineHeight: 26,
+    fontSize: 15,
+    color: '#6B5B47',
   },
 });

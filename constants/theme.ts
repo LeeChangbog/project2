@@ -5,25 +5,36 @@
 
 import { Platform } from 'react-native';
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
+// 사주 팔자에 어울리는 전통적인 색상
+const tintColorLight = '#C9A961'; // 골드
+const tintColorDark = '#D4AF37'; // 더 밝은 골드
 
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#fff',
+    text: '#5C4033', // 갈색 텍스트
+    background: '#FAF5F0', // 크림 베이지 배경
     tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
+    icon: '#8B6F47',
+    tabIconDefault: '#B8A082',
     tabIconSelected: tintColorLight,
+    // 추가 색상
+    accent: '#A0522D', // 다크 레드/갈색
+    cardBackground: '#FFF8F0', // 카드 배경
+    border: '#D4C4B0', // 테두리
+    shadow: '#E8D5C4', // 그림자
   },
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
+    text: '#F5E6D3', // 크림 텍스트
+    background: '#2C2416', // 어두운 갈색 배경
     tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
+    icon: '#C9A961',
+    tabIconDefault: '#8B7355',
     tabIconSelected: tintColorDark,
+    // 추가 색상
+    accent: '#CD853F', // 밝은 갈색
+    cardBackground: '#3D2F1F', // 카드 배경
+    border: '#5C4A37', // 테두리
+    shadow: '#1A1611', // 그림자
   },
 };
 

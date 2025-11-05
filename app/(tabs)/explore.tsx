@@ -1,15 +1,21 @@
 import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Platform, StyleSheet, TouchableOpacity } from 'react-native';
 
-import { Collapsible } from '@/components/ui/collapsible';
 import { ExternalLink } from '@/components/external-link';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { Collapsible } from '@/components/ui/collapsible';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Fonts } from '@/constants/theme';
+import { Colors, Fonts } from '@/constants/theme';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export default function TabTwoScreen() {
+  const router = useRouter();
+  const colorScheme = useColorScheme();
+  const tintColor = Colors[colorScheme ?? 'light'].tint;
+
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
@@ -21,6 +27,14 @@ export default function TabTwoScreen() {
           style={styles.headerImage}
         />
       }>
+      <ThemedView style={styles.header}>
+        <TouchableOpacity
+          style={styles.homeButton}
+          onPress={() => router.push('/(tabs)')}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+          <IconSymbol name="house.fill" size={24} color={tintColor} />
+        </TouchableOpacity>
+      </ThemedView>
       <ThemedView style={styles.titleContainer}>
         <ThemedText
           type="title"
@@ -99,6 +113,25 @@ export default function TabTwoScreen() {
 }
 
 const styles = StyleSheet.create({
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 20,
+    paddingTop: Platform.OS === 'web' ? 20 : 60,
+    ...Platform.select({
+      web: {
+        cursor: 'pointer',
+      },
+    }),
+  },
+  homeButton: {
+    padding: 5,
+    ...Platform.select({
+      web: {
+        cursor: 'pointer',
+      },
+    }),
+  },
   headerImage: {
     color: '#808080',
     bottom: -90,
