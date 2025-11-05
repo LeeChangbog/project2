@@ -10,6 +10,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "web:clear": "expo start --web --clear --port 8082",
+    "build:web": "expo export:web",
+    "build:web:clear": "expo export:web --clear",
     "lint": "expo lint"
   },
   "dependencies": {
