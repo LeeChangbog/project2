@@ -371,54 +371,63 @@ SajuMonooApp/
                             ┌─────────────────────────┐
                             │  RootLayout             │
                             │  app/_layout.tsx        │
+                            │                         │
+                            │  - AuthProvider         │
+                            │  - UserDataProvider     │
+                            │  - Stack Navigation     │
                             └──────────┬──────────────┘
                                        │
                 ┌──────────────────────┼──────────────────────┐
                 │                      │                      │
         ┌───────▼────────┐    ┌────────▼────────┐    ┌────────▼────────┐
-        │ AuthContext    │    │ UserDataContext │    │ Tab Navigation  │
-        │                │    │                 │    │                 │
-        │ + user         │    │ + user1         │    │                 │
-        │ + login()      │    │ + user2         │    │                 │
-        │ + logout()     │    │ + setUser1()    │    │                 │
-        │ + updateProfile│    │ + setUser2()    │    │                 │
-        └────────────────┘    │ + compatibility │    │                 │
-                              │   Result        │    │                 │
-                              └─────────────────┘    └────────┬────────┘
-                                                              │
-                    ┌─────────────────────────────────────────┼─────────────┐
-                    │                                         │             │
-          ┌─────────▼────────┐                    ┌──────────▼────────┐   │
-          │ Home             │                    │ Input             │   │
-          │ app/(tabs)/index │                    │ app/input.tsx     │   │
-          │                  │                    │                   │   │
-          │ - 궁합문어 로고   │                    │ - localUser1      │   │
-          │ - 살 설명 섹션    │                    │ - localUser2      │   │
-          │ - 입력 버튼       │                    │ - handleSubmit()  │   │
-          └──────────────────┘                    └──────────┬────────┘   │
-                                                              │             │
-                                                              │             │
-          ┌───────────────────────────────────────────────────┼─────────────┤
-          │                                                   │             │
-  ┌───────▼────────┐                              ┌──────────▼────────┐   │
-  │ Loading        │                              │ Result            │   │
-  │ app/loading.tsx│                              │ app/result.tsx    │   │
-  │                │                              │                   │   │
-  │ - calculate()  │                              │ - score           │   │
-  └────────────────┘                              │ - explanation     │   │
-          │                                       │ - salData         │   │
-          │                                       │ - OctagonGraph    │   │
-          │                                       └──────────┬─────────┘   │
-          │                                                  │             │
-          │                                                  │             │
-  ┌───────▼────────┐                              ┌──────────▼────────┐   │
-  │ Result         │                              │ AIAdvice          │   │
-  │ app/result.tsx │                              │ app/ai-advice.tsx │   │
-  │                │                              │                   │   │
-  │ - score        │                              │ - advice          │   │
-  │ - sajuInfo     │                              │ - tips            │   │
-  │ - OctagonGraph │                              │ - summary         │   │
-  └────────────────┘                              └───────────────────┘   │
+        │ AuthContext    │    │ UserDataContext │    │ Stack Screens   │
+        │ contexts/      │    │ contexts/       │    │                 │
+        │                │    │                 │    │ - (tabs)/index  │
+        │ + user         │    │ + user1         │    │ - (tabs)/explore │
+        │ + isAuthenticated│  │ + user2         │    │ - input         │
+        │ + login()      │    │ + setUser1()    │    │ - loading       │
+        │ + logout()     │    │ + setUser2()    │    │ - result        │
+        │ + updateProfile│    │ + compatibility │    │ - ai-advice     │
+        │                │    │   Result        │    │ - login         │
+        │                │    │ + setCompatibility│  │ - signup        │
+        └────────────────┘    │   Result()      │    │ - profile       │
+                              └─────────────────┘    │ - modal         │
+                                                      └────────┬────────┘
+                                                               │
+                    ┌──────────────────────────────────────────┼─────────────┐
+                    │                                          │             │
+          ┌─────────▼────────┐                    ┌───────────▼────────┐   │
+          │ Home             │                    │ Input              │   │
+          │ app/(tabs)/index │                    │ app/input.tsx      │   │
+          │                  │                    │                    │   │
+          │ - 궁합문어 로고   │                    │ - localUser1       │   │
+          │ - 살 설명 섹션    │                    │ - localUser2       │   │
+          │ - 입력 버튼       │                    │ - handleSubmit()   │   │
+          │                  │                    │ - handleLoadProfile│   │
+          └─────────┬────────┘                    └───────────┬────────┘   │
+                    │                                          │             │
+                    │                                          │             │
+          ┌─────────▼────────┐                    ┌───────────▼────────┐   │
+          │ Loading         │                    │ Result             │   │
+          │ app/loading.tsx │                    │ app/result.tsx     │   │
+          │                 │                    │                    │   │
+          │ - useEffect()   │                    │ - score            │   │
+          │ - calculate()   │                    │ - explanation      │   │
+          │   (calculateCompatibility)│          │ - salData          │   │
+          └─────────┬────────┘                    │ - OctagonGraph    │   │
+                    │                             │ - navigateToAI()  │   │
+                    │                             └───────────┬────────┘   │
+                    │                                          │             │
+                    │                                          │             │
+          ┌─────────▼────────┐                    ┌───────────▼────────┐   │
+          │ Result           │                    │ AIAdvice          │   │
+          │ app/result.tsx   │                    │ app/ai-advice.tsx │   │
+          │                  │                    │                    │   │
+          │ - score          │                    │ - advice           │   │
+          │ - saju1, saju2   │                    │ - tips             │   │
+          │ - salAnalysis    │                    │ - summary          │   │
+          │ - OctagonGraph   │                    │ - getAIAdvice()    │   │
+          └──────────────────┘                    └────────────────────┘   │
                                                                              │
                                                                              │
   ┌─────────────────────────────────────────────────────────────────────────┤
@@ -429,34 +438,50 @@ SajuMonooApp/
   │  │                │  │                │  │                │          │
   │  │ - title        │  │ - salData      │  │ - value        │          │
   │  │ - showHomeBtn  │  │ - renderGraph()│  │ - onChange()    │          │
-  │  │ - showAuthBtn  │  └────────────────┘  └────────────────┘          │
-  │  └────────────────┘                                                  │
-  │                                                                       │
-  │  ┌────────────────┐  ┌────────────────┐                            │
-  │  │ ThemedText     │  │ ThemedView     │                            │
-  │  │ components/    │  │ components/    │                            │
-  │  │                │  │                │                            │
-  │  │ - type         │  │ - style        │                            │
-  │  │ - style        │  └────────────────┘                            │
-  │  └────────────────┘                                                │
-  │                                                                     │
-  │  ┌────────────────────────────────────────────────────────────┐   │
-  │  │ Utils                                                       │   │
-  │  │                                                             │   │
-  │  │  apiClient.ts                                               │   │
-  │  │    ├─ apiRequest()                                          │   │
-  │  │    ├─ authAPI { login, signup, getProfile, updateProfile } │   │
-  │  │    └─ aiAPI { getAdvice }                                   │   │
-  │  │                                                             │   │
-  │  │  sajuCalculator.ts                                          │   │
-  │  │    ├─ calculateSaju()                                       │   │
-  │  │    ├─ analyzeSal()                                         │   │
-  │  │    └─ calculateCompatibility()                             │   │
-  │  │                                                             │   │
-  │  │  aiService.ts                                               │   │
-  │  │    └─ getAIAdvice()                                        │   │
-  │  └────────────────────────────────────────────────────────────┘   │
-  └─────────────────────────────────────────────────────────────────┘
+  │  │ - showAuthBtn  │  │                │  └────────────────┘          │
+  │  └────────────────┘  └────────────────┘                              │
+  │                                                                         │
+  │  ┌────────────────┐  ┌────────────────┐                              │
+  │  │ TimePicker     │  │ ThemedText     │                              │
+  │  │ components/    │  │ components/    │                              │
+  │  │                │  │                │                              │
+  │  │ - value        │  │ - type         │                              │
+  │  │ - onChange()   │  │ - style        │                              │
+  │  └────────────────┘  └────────────────┘                              │
+  │                                                                         │
+  │  ┌────────────────┐                                                    │
+  │  │ ThemedView     │                                                    │
+  │  │ components/    │                                                    │
+  │  │                │                                                    │
+  │  │ - style        │                                                    │
+  │  └────────────────┘                                                    │
+  │                                                                         │
+  │  ┌────────────────────────────────────────────────────────────┐      │
+  │  │ Utils                                                         │      │
+  │  │                                                               │      │
+  │  │  apiClient.ts                                                 │      │
+  │  │    ├─ apiRequest()                                            │      │
+  │  │    ├─ getAuthToken()                                          │      │
+  │  │    ├─ setAuthToken()                                          │      │
+  │  │    ├─ authAPI {                                               │      │
+  │  │    │    ├─ login()                                            │      │
+  │  │    │    ├─ signup()                                            │      │
+  │  │    │    ├─ logout()                                            │      │
+  │  │    │    ├─ getProfile()                                        │      │
+  │  │    │    └─ updateProfile()                                    │      │
+  │  │    └─ aiAPI {                                                 │      │
+  │  │         └─ getAdvice()                                        │      │
+  │  │                                                               │      │
+  │  │  sajuCalculator.ts                                            │      │
+  │  │    ├─ calculateSaju()                                         │      │
+  │  │    ├─ analyzeSal() (내부 함수)                                │      │
+  │  │    └─ calculateCompatibility()                                 │      │
+  │  │                                                               │      │
+  │  │  aiService.ts                                                 │      │
+  │  │    ├─ getAIAdvice()                                           │      │
+  │  │    └─ getAIAdviceGemini()                                     │      │
+  │  └────────────────────────────────────────────────────────────┘      │
+  └─────────────────────────────────────────────────────────────────────┘
 ```
 
 #### 주요 컴포넌트 설명
@@ -497,58 +522,63 @@ SajuMonooApp/
                     ┌─────────────────────────────────────┐
                     │  Express Server                     │
                     │  backend/server.js                  │
-                    │  Port: 3000                        │
+                    │  Port: 3000 (기본값)                │
                     └────────────┬────────────────────────┘
                                   │
                     ┌─────────────┴─────────────┐
                     │                           │
         ┌───────────▼──────────┐    ┌───────────▼──────────┐
         │  Middleware          │    │  Routes              │
+        │  server.js:13-15     │    │  server.js:17-196    │
         │                      │    │                      │
         │  - cors()            │    │  GET  /              │
-        │  - express.json()    │    │       └─ 상태 확인    │
-        └──────────────────────┘    │                      │
-                                     │  POST /api/ai-advice │
-                                     │       ├─ 입력 검증    │
+        │    (CORS 허용)        │    │       └─ 상태 확인    │
+        │  - express.json()    │    │                      │
+        │    (JSON 파싱)        │    │  POST /api/ai-advice │
+        └──────────────────────┘    │       ├─ 입력 검증    │
                                      │       ├─ OpenAI 호출 │
+                                     │       ├─ 기본 조언    │
                                      │       └─ 응답 반환    │
                                      │                      │
                                      │  POST /api/auth/login │
+                                     │       ├─ 입력 검증    │
                                      │       ├─ 인증 처리    │
-                                     │       ├─ DB 조회(예정)│
                                      │       └─ 토큰 발급    │
+                                     │       (DB 조회 예정)  │
                                      │                      │
                                      │  POST /api/auth/signup│
+                                     │       ├─ 입력 검증    │
                                      │       ├─ 회원가입     │
-                                     │       ├─ DB 저장(예정)│
                                      │       └─ 토큰 발급    │
+                                     │       (DB 저장 예정)  │
                                      │                      │
                                      │  GET  /api/auth/profile│
                                      │       ├─ 토큰 검증     │
-                                     │       ├─ DB 조회(예정)│
                                      │       └─ 프로필 반환  │
+                                     │       (DB 조회 예정)  │
                                      │                      │
                                      │  PUT  /api/auth/profile│
                                      │       ├─ 토큰 검증     │
-                                     │       ├─ DB 업데이트(예정)│
+                                     │       ├─ 입력 검증     │
                                      │       └─ 프로필 반환  │
+                                     │       (DB 업데이트 예정)│
                                      └───────────┬──────────┘
                                                  │
                     ┌───────────────────────────┼───────────────────────────┐
                     │                           │                           │
         ┌───────────▼──────────┐    ┌───────────▼──────────┐    ┌───────────▼──────────┐
         │  Helper Functions    │    │  OpenAI Service      │    │  Database (예정)     │
-        │                      │    │                      │    │                      │
-        │  - generatePrompt()   │    │  - apiKey (환경변수)  │    │  User Model          │
-        │  - parseAIResponse()  │    │  - chat.completions  │    │    - _id             │
-        │  - getDefaultAdvice() │    │    .create()         │    │    - email (unique)  │
-        │  - getDefaultTips()   │    │  - model: gpt-3.5    │    │    - password (hash) │
-        └──────────────────────┘    └──────────────────────┘    │    - name             │
-                                                                │    - profile {        │
-                                                                │        name          │
-                                                                │        birthDate     │
-                                                                │        birthTime     │
-                                                                │        gender        │
+        │  server.js:198-285   │    │  server.js:49-69     │    │                      │
+        │                      │    │                      │    │  User Model          │
+        │  - generatePrompt()   │    │  - OpenAI 인스턴스    │    │    - _id             │
+        │    (프롬프트 생성)     │    │  - apiKey (환경변수)  │    │    - email (unique)  │
+        │  - parseAIResponse()  │    │  - chat.completions  │    │    - password (hash) │
+        │    (응답 파싱)        │    │    .create()         │    │    - name             │
+        │  - getDefaultAdvice() │    │  - model: gpt-3.5-turbo│  │    - profile {        │
+        │    (기본 조언)        │    │  - max_tokens: 500   │    │        name          │
+        │  - getDefaultTips()   │    │  - temperature: 0.7  │    │        birthDate     │
+        │    (기본 팁)          │    └──────────────────────┘    │        birthTime     │
+        └──────────────────────┘                                │        gender        │
                                                                 │      }               │
                                                                 │    - createdAt       │
                                                                 │    - updatedAt       │
@@ -564,11 +594,14 @@ SajuMonooApp/
                     │
         ┌───────────▼──────────┐
         │  Environment Vars   │
+        │  backend/.env        │
         │                      │
-        │  - PORT              │
-        │  - OPENAI_API_KEY    │
-        │  - DATABASE_URL (예정)│
-        │  - JWT_SECRET (예정) │
+        │  - PORT              │ → process.env.PORT (server.js:11)
+        │  - OPENAI_API_KEY    │ → process.env.OPENAI_API_KEY (server.js:36)
+        │  - DATABASE_URL (예정)│ → process.env.DATABASE_URL (향후)
+        │  - JWT_SECRET (예정) │ → process.env.JWT_SECRET (향후)
+        │                      │
+        │  dotenv.config()     │ → require('dotenv').config() (server.js:8)
         └──────────────────────┘
 ```
 
