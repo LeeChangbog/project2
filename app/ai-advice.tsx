@@ -1,33 +1,55 @@
 /**
- * AI 조언 화면
- * - 궁합 결과를 기반으로 AI의 조언을 표시
- * - 로딩 상태 표시
- * - 조언 내용 표시
+ * AI 조언 화면 (채팅 인터페이스)
+ * - 궁합 결과를 기반으로 AI의 초기 조언을 표시
+ * - AI와 실시간 대화 가능
+ * - 메시지 히스토리 관리
  */
 import { AppHeader } from '@/components/AppHeader';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Colors } from '@/constants/theme';
+import { useAuth } from '@/contexts/AuthContext';
 import { useUserData } from '@/contexts/UserDataContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { AIAdviceResponse, getAIAdvice } from '@/utils/aiService';
+import { aiChatAPI } from '@/utils/apiClient';
+import { getAIAdvice } from '@/utils/aiService';
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, Platform, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+
+interface Message {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+}
 
 export default function AIAdviceScreen() {
   const router = useRouter();
   const colorScheme = useColorScheme();
   const tintColor = Colors[colorScheme ?? 'light'].tint;
   const { user1, user2, compatibilityResult } = useUserData();
+  const { user } = useAuth();
+  const scrollViewRef = useRef<ScrollView>(null);
 
   const [loading, setLoading] = useState(true);
-  const [advice, setAdvice] = useState<AIAdviceResponse | null>(null);
+  const [sending, setSending] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [inputText, setInputText] = useState('');
   const [error, setError] = useState<string | null>(null);
 
+  // 초기 AI 조언 가져오기
   useEffect(() => {
-    // AI 조언 가져오기
-    const fetchAdvice = async () => {
+    const fetchInitialAdvice = async () => {
       if (!compatibilityResult) {
         setError('궁합 결과가 없습니다.');
         setLoading(false);
@@ -38,6 +60,7 @@ export default function AIAdviceScreen() {
         setLoading(true);
         setError(null);
 
+        // 초기 조언 가져오기
         const adviceData = await getAIAdvice({
           score: compatibilityResult.score,
           explanation: compatibilityResult.explanation,
@@ -48,7 +71,15 @@ export default function AIAdviceScreen() {
           saju2: compatibilityResult.saju2,
         });
 
-        setAdvice(adviceData);
+        // 초기 조언을 첫 메시지로 추가
+        const initialMessage: Message = {
+          id: `msg-${Date.now()}`,
+          role: 'assistant',
+          content: `안녕하세요! 궁합 결과를 분석한 조언을 드리겠습니다.\n\n${adviceData.advice}${adviceData.tips && adviceData.tips.length > 0 ? '\n\n💡 구체적인 조언:\n' + adviceData.tips.map((tip, i) => `${i + 1}. ${tip}`).join('\n') : ''}\n\n궁합에 대해 더 궁금한 점이 있으시면 언제든 물어보세요!`,
+          timestamp: new Date(),
+        };
+
+        setMessages([initialMessage]);
       } catch (err) {
         console.error('AI 조언 가져오기 실패:', err);
         setError('AI 조언을 가져오는 중 오류가 발생했습니다.');
@@ -57,82 +88,211 @@ export default function AIAdviceScreen() {
       }
     };
 
-    fetchAdvice();
+    fetchInitialAdvice();
   }, [compatibilityResult, user1, user2]);
+
+  // 메시지 전송
+  const handleSendMessage = async () => {
+    if (!inputText.trim() || sending) return;
+
+    const userMessage: Message = {
+      id: `msg-${Date.now()}-user`,
+      role: 'user',
+      content: inputText.trim(),
+      timestamp: new Date(),
+    };
+
+    // 사용자 메시지 추가
+    setMessages((prev) => [...prev, userMessage]);
+    setInputText('');
+    setSending(true);
+    setError(null);
+
+    try {
+      // 메시지 히스토리 구성 (시스템 메시지 제외)
+      const messageHistory = messages.map((msg) => ({
+        role: msg.role,
+        content: msg.content,
+      }));
+
+      // 새 사용자 메시지 추가
+      messageHistory.push({
+        role: 'user',
+        content: userMessage.content,
+      });
+
+      // AI 채팅 API 호출
+      console.log('📤 메시지 전송 시작:', { messageCount: messageHistory.length });
+      const response = await aiChatAPI.sendMessage({
+        messages: messageHistory,
+        compatibilityContext: compatibilityResult
+          ? {
+              score: compatibilityResult.score,
+              explanation: compatibilityResult.explanation,
+              salAnalysis: compatibilityResult.salAnalysis,
+              user1,
+              user2,
+            }
+          : undefined,
+        userId: user?.id,
+      });
+
+      console.log('📥 AI 채팅 응답 받음:', { success: response.success, hasData: !!response.data });
+
+      if (response.success && response.data?.message) {
+        const aiMessage: Message = {
+          id: `msg-${Date.now()}-ai`,
+          role: 'assistant',
+          content: response.data.message,
+          timestamp: new Date(),
+        };
+
+        setMessages((prev) => [...prev, aiMessage]);
+        setError(null);
+      } else {
+        console.error('❌ AI 응답 형식 오류:', response);
+        throw new Error(response.message || 'AI 응답을 받지 못했습니다.');
+      }
+    } catch (err: any) {
+      console.error('❌ 메시지 전송 실패:', err);
+      const errorMessage = err?.message || '메시지 전송 중 오류가 발생했습니다.';
+      setError(errorMessage);
+      
+      // 오류 메시지 추가
+      const errorMessageObj: Message = {
+        id: `msg-${Date.now()}-error`,
+        role: 'assistant',
+        content: `죄송합니다. 오류가 발생했습니다: ${errorMessage}\n\n다시 시도해주세요.`,
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMessageObj]);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  // 스크롤을 맨 아래로
+  useEffect(() => {
+    if (messages.length > 0 && scrollViewRef.current) {
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    }
+  }, [messages]);
 
   return (
     <ThemedView style={styles.container}>
       <AppHeader title="AI 조언" />
-      <ScrollView 
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}>
-        <ThemedView style={styles.content}>
-          {loading ? (
-            // 로딩 상태
-            <ThemedView style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color={tintColor} />
-              <ThemedText type="subtitle" style={styles.loadingText}>
-                AI가 조언을 생성하고 있습니다...
-              </ThemedText>
-            </ThemedView>
-          ) : error ? (
-            // 오류 상태
-            <ThemedView style={styles.errorContainer}>
-              <ThemedText type="subtitle" style={styles.errorText}>
-                {error}
-              </ThemedText>
-              <TouchableOpacity
-                style={[styles.retryButton, { backgroundColor: tintColor }]}
-                onPress={() => router.back()}>
-                <ThemedText style={styles.retryButtonText}>돌아가기</ThemedText>
-              </TouchableOpacity>
-            </ThemedView>
-          ) : advice ? (
-            // 조언 표시
-            <>
-              {/* 요약 */}
-              {advice.summary && (
-                <ThemedView style={styles.summarySection}>
-                  <ThemedText type="subtitle" style={styles.sectionTitle}>
-                    요약
-                  </ThemedText>
-                  <ThemedText style={styles.summaryText}>{advice.summary}</ThemedText>
-                </ThemedView>
+      <KeyboardAvoidingView
+        style={styles.keyboardView}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}>
+        {loading ? (
+          <ThemedView style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={tintColor} />
+            <ThemedText type="subtitle" style={styles.loadingText}>
+              AI가 조언을 생성하고 있습니다...
+            </ThemedText>
+          </ThemedView>
+        ) : error && messages.length === 0 ? (
+          <ThemedView style={styles.errorContainer}>
+            <ThemedText type="subtitle" style={styles.errorText}>
+              {error}
+            </ThemedText>
+            <TouchableOpacity
+              style={[styles.retryButton, { backgroundColor: tintColor }]}
+              onPress={() => router.back()}>
+              <ThemedText style={styles.retryButtonText}>돌아가기</ThemedText>
+            </TouchableOpacity>
+          </ThemedView>
+        ) : (
+          <>
+            {/* 메시지 리스트 */}
+            <ScrollView
+              ref={scrollViewRef}
+              style={styles.messagesContainer}
+              contentContainerStyle={styles.messagesContent}
+              showsVerticalScrollIndicator={false}>
+              {messages.map((message) => (
+                <View
+                  key={message.id}
+                  style={[
+                    styles.messageWrapper,
+                    message.role === 'user' ? styles.userMessageWrapper : styles.aiMessageWrapper,
+                  ]}>
+                  <ThemedView
+                    style={[
+                      styles.messageBubble,
+                      message.role === 'user'
+                        ? [styles.userMessage, { backgroundColor: tintColor }]
+                        : styles.aiMessage,
+                    ]}>
+                    <ThemedText
+                      style={[
+                        styles.messageText,
+                        message.role === 'user' ? styles.userMessageText : styles.aiMessageText,
+                      ]}>
+                      {message.content}
+                    </ThemedText>
+                  </ThemedView>
+                </View>
+              ))}
+              {sending && (
+                <View style={[styles.messageWrapper, styles.aiMessageWrapper]}>
+                  <ThemedView style={[styles.messageBubble, styles.aiMessage]}>
+                    <ActivityIndicator size="small" color={tintColor} />
+                    <ThemedText style={[styles.messageText, styles.aiMessageText]}>
+                      AI가 입력 중...
+                    </ThemedText>
+                  </ThemedView>
+                </View>
               )}
+            </ScrollView>
 
-              {/* 전체 조언 */}
-              <ThemedView style={styles.adviceSection}>
-                <ThemedText type="subtitle" style={styles.sectionTitle}>
-                  AI 조언
-                </ThemedText>
-                <ThemedText style={styles.adviceText}>{advice.advice}</ThemedText>
-              </ThemedView>
-
-              {/* 구체적인 팁 */}
-              {advice.tips && advice.tips.length > 0 && (
-                <ThemedView style={styles.tipsSection}>
-                  <ThemedText type="subtitle" style={styles.sectionTitle}>
-                    구체적인 조언
-                  </ThemedText>
-                  {advice.tips.map((tip, index) => (
-                    <ThemedView key={index} style={styles.tipItem}>
-                      <ThemedText style={styles.tipBullet}>•</ThemedText>
-                      <ThemedText style={styles.tipText}>{tip}</ThemedText>
-                    </ThemedView>
-                  ))}
-                </ThemedView>
+            {/* 입력 영역 */}
+            <ThemedView style={styles.inputContainer}>
+              {error && (
+                <ThemedText style={styles.errorTextSmall}>{error}</ThemedText>
               )}
-
-              {/* 확인 버튼 */}
-              <TouchableOpacity
-                style={[styles.completeButton, { backgroundColor: tintColor }]}
-                onPress={() => router.back()}>
-                <ThemedText style={styles.completeButtonText}>확인 완료</ThemedText>
-              </TouchableOpacity>
-            </>
-          ) : null}
-        </ThemedView>
-      </ScrollView>
+              <View style={styles.inputRow}>
+                <TextInput
+                  style={[
+                    styles.input,
+                    {
+                      borderColor: '#D4C4B0',
+                      backgroundColor: '#FFFFFF',
+                      color: colorScheme === 'dark' ? '#F5E6D3' : '#5C4033',
+                    },
+                  ]}
+                  placeholder="메시지를 입력하세요..."
+                  placeholderTextColor={colorScheme === 'dark' ? '#8B7355' : '#B8A082'}
+                  value={inputText}
+                  onChangeText={setInputText}
+                  multiline
+                  maxLength={500}
+                  editable={!sending}
+                  onSubmitEditing={handleSendMessage}
+                  blurOnSubmit={false}
+                />
+                <TouchableOpacity
+                  style={[
+                    styles.sendButton,
+                    { backgroundColor: tintColor },
+                    (!inputText.trim() || sending) && styles.sendButtonDisabled,
+                  ]}
+                  onPress={handleSendMessage}
+                  disabled={!inputText.trim() || sending}>
+                  {sending ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <ThemedText style={styles.sendButtonText}>전송</ThemedText>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </ThemedView>
+          </>
+        )}
+      </KeyboardAvoidingView>
     </ThemedView>
   );
 }
@@ -141,13 +301,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  scrollContent: {
-    flexGrow: 1,
-  },
-  content: {
-    padding: 20,
-    gap: 24,
-    paddingBottom: 40,
+  keyboardView: {
+    flex: 1,
   },
   loadingContainer: {
     flex: 1,
@@ -161,7 +316,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   errorContainer: {
+    flex: 1,
     alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: 40,
     gap: 20,
   },
@@ -186,102 +343,108 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  summarySection: {
-    backgroundColor: '#FFF8F0',
-    borderRadius: 16,
-    padding: 20,
-    borderWidth: 2,
-    borderColor: '#D4C4B0',
-    marginBottom: 16,
-    ...Platform.select({
-      web: {
-        boxShadow: '0 2px 8px rgba(232, 213, 196, 0.2)',
-      },
-    }),
-  },
-  adviceSection: {
-    backgroundColor: '#FFF8F0',
-    borderRadius: 16,
-    padding: 20,
-    borderWidth: 2,
-    borderColor: '#D4C4B0',
-    marginBottom: 16,
-    ...Platform.select({
-      web: {
-        boxShadow: '0 2px 8px rgba(232, 213, 196, 0.2)',
-      },
-    }),
-  },
-  tipsSection: {
-    backgroundColor: '#FFF8F0',
-    borderRadius: 16,
-    padding: 20,
-    borderWidth: 2,
-    borderColor: '#D4C4B0',
-    marginBottom: 16,
-    ...Platform.select({
-      web: {
-        boxShadow: '0 2px 8px rgba(232, 213, 196, 0.2)',
-      },
-    }),
-  },
-  sectionTitle: {
-    marginBottom: 12,
-    color: '#8B6F47',
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  summaryText: {
-    fontSize: 16,
-    lineHeight: 24,
-    color: '#6B5B47',
-    fontWeight: '600',
-  },
-  adviceText: {
-    fontSize: 15,
-    lineHeight: 26,
-    color: '#6B5B47',
-  },
-  tipItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 12,
-    gap: 12,
-  },
-  tipBullet: {
-    fontSize: 18,
-    color: '#A0522D',
-    fontWeight: 'bold',
-    marginTop: 2,
-  },
-  tipText: {
+  messagesContainer: {
     flex: 1,
+  },
+  messagesContent: {
+    padding: 16,
+    paddingBottom: 20,
+  },
+  messageWrapper: {
+    marginBottom: 12,
+  },
+  userMessageWrapper: {
+    alignItems: 'flex-end',
+  },
+  aiMessageWrapper: {
+    alignItems: 'flex-start',
+  },
+  messageBubble: {
+    maxWidth: '80%',
+    padding: 12,
+    borderRadius: 16,
+    ...Platform.select({
+      web: {
+        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+      },
+    }),
+  },
+  userMessage: {
+    borderBottomRightRadius: 4,
+  },
+  aiMessage: {
+    backgroundColor: '#FFF8F0',
+    borderWidth: 2,
+    borderColor: '#D4C4B0',
+    borderBottomLeftRadius: 4,
+  },
+  messageText: {
     fontSize: 15,
-    lineHeight: 24,
+    lineHeight: 22,
+  },
+  userMessageText: {
+    color: '#fff',
+  },
+  aiMessageText: {
     color: '#6B5B47',
   },
-  completeButton: {
-    paddingVertical: 18,
-    borderRadius: 30,
+  inputContainer: {
+    padding: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#E8D5C4',
+    backgroundColor: '#FFF8F0',
+    ...Platform.select({
+      web: {
+        boxShadow: '0 -2px 8px rgba(0, 0, 0, 0.1)',
+      },
+    }),
+  },
+  errorTextSmall: {
+    color: '#D32F2F',
+    fontSize: 12,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 8,
+  },
+  input: {
+    flex: 1,
+    borderWidth: 2,
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    fontSize: 15,
+    minHeight: 44,
+    maxHeight: 100,
+    ...Platform.select({
+      web: {
+        outlineStyle: 'none',
+      },
+    }),
+  },
+  sendButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+    minHeight: 44,
+    justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 20,
-    shadowColor: '#8B6F47',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
+    minWidth: 60,
     ...Platform.select({
       web: {
         cursor: 'pointer',
-        boxShadow: '0 4px 12px rgba(139, 111, 71, 0.3)',
       },
     }),
   },
-  completeButtonText: {
+  sendButtonDisabled: {
+    opacity: 0.5,
+  },
+  sendButtonText: {
     color: '#fff',
-    fontSize: 18,
-    fontWeight: '700',
-    letterSpacing: 1,
+    fontSize: 15,
+    fontWeight: '600',
   },
 });
-

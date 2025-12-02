@@ -6,18 +6,38 @@
  */
 
 // 배포 환경에서는 실제 서버 URL 사용, 로컬에서는 환경 변수 또는 localhost
-const getApiBaseUrl = () => {
+// SSR 호환을 위해 함수로 변경하여 필요할 때만 호출
+const getApiBaseUrl = (): string => {
   if (process.env.EXPO_PUBLIC_API_BASE_URL) {
     return process.env.EXPO_PUBLIC_API_BASE_URL;
   }
-  // 웹 환경에서 localhost가 아니면 현재 도메인 사용
-  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+  // 웹 환경에서만 실행 (클라이언트 측)
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    
+    // localhost 또는 127.0.0.1이면 항상 백엔드 포트(3000) 사용
+    // 프론트엔드가 8081, 8082 등 다른 포트에서 실행되어도 백엔드는 3000 포트
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return 'http://localhost:3000';
+    }
+    
+    // 배포 환경(로컬이 아닌 경우)
+    // ⚠️ 주의: Netlify 등 배포 환경에서는 반드시 EXPO_PUBLIC_API_BASE_URL 환경 변수를 설정해야 합니다
+    // 환경 변수가 없으면 현재 도메인을 사용 (같은 도메인에서 프론트/백엔드 실행 가정)
+    // 백엔드가 다른 도메인/서브도메인에 있으면 환경 변수 필수!
+    if (!process.env.EXPO_PUBLIC_API_BASE_URL) {
+      console.warn('⚠️ EXPO_PUBLIC_API_BASE_URL이 설정되지 않았습니다. 현재 도메인을 사용합니다:', window.location.origin);
+      console.warn('   Netlify 배포 시 환경 변수를 설정하세요: Site settings > Environment variables');
+    }
     return window.location.origin;
   }
+  
+  // 서버 측 렌더링 또는 기본값
   return 'http://localhost:3000';
 };
 
-const API_BASE_URL = getApiBaseUrl();
+// 함수 호출 시점에 결정 (SSR 호환)
+const getAPIBaseUrl = () => getApiBaseUrl();
 
 /**
  * 인증 토큰 가져오기 (로컬 스토리지 또는 AsyncStorage)
@@ -87,7 +107,7 @@ export async function apiRequest<T>(
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const url = `${API_BASE_URL}${endpoint}`;
+  const url = `${getAPIBaseUrl()}${endpoint}`;
   
   try {
     console.log(`🌐 API 요청: ${url}`, { method: options.method || 'GET' });
@@ -170,7 +190,7 @@ export const authAPI = {
   async signup(email: string, password: string, name?: string) {
     try {
       console.log('📤 signup API 호출:', { email, name });
-      const url = `${API_BASE_URL}/api/auth/signup`;
+      const url = `${getAPIBaseUrl()}/api/auth/signup`;
       console.log('🌐 요청 URL:', url);
       
       const response = await apiRequest<{
@@ -314,6 +334,78 @@ export const compatibilityAPI = {
       method: 'POST',
       body: JSON.stringify(request),
     });
+  },
+};
+
+/**
+ * AI 채팅 API
+ */
+export const aiChatAPI = {
+  /**
+   * AI와 채팅 메시지 전송
+   */
+  async sendMessage(request: {
+    messages: Array<{ role: 'user' | 'assistant'; content: string }>;
+    compatibilityContext?: {
+      score: number;
+      explanation: string;
+      salAnalysis: Array<{ type: string; count: number; description: string }>;
+      user1?: any;
+      user2?: any;
+    };
+    userId?: string;
+  }) {
+    try {
+      console.log('📤 AI 채팅 API 호출 시작:', { messageCount: request.messages.length });
+      
+      const token = await getAuthToken();
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
+      if (request.userId) {
+        headers['x-user-id'] = request.userId;
+      }
+
+      const baseUrl = getAPIBaseUrl();
+      const url = `${baseUrl}/api/ai-chat`;
+      console.log('🌐 AI 채팅 요청 URL:', url);
+      console.log('📝 요청 데이터:', {
+        messageCount: request.messages.length,
+        hasContext: !!request.compatibilityContext,
+        userId: request.userId || '없음',
+      });
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          messages: request.messages,
+          compatibilityContext: request.compatibilityContext,
+          userId: request.userId,
+        }),
+      });
+
+      console.log('📡 AI 채팅 응답 상태:', response.status, response.statusText);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('❌ AI 채팅 API 오류 응답:', errorData);
+        throw new Error(errorData.message || `API 오류: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('✅ AI 채팅 API 성공 응답:', { success: data.success, hasMessage: !!data.data?.message });
+      return data;
+    } catch (error: any) {
+      console.error('❌ AI 채팅 API 호출 실패:', error);
+      console.error('   오류 상세:', error.message);
+      throw error;
+    }
   },
 };
 

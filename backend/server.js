@@ -11,6 +11,7 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 require('dotenv').config();
+const OpenAI = require('openai');
 
 // MongoDB 연결
 const { connectDatabase } = require('./config/database');
@@ -224,14 +225,15 @@ app.post('/api/ai-advice', async (req, res) => {
 
     // OpenAI API 호출
     try {
-      const { OpenAI } = require('openai');
-      const openai = new OpenAI({ apiKey: openaiApiKey });
+      const client = new OpenAI({
+        apiKey: openaiApiKey,
+      });
 
       const prompt = generatePrompt({ score, explanation, salAnalysis, user1, user2 });
 
       console.log('🤖 OpenAI API 호출 시작...');
-      const response = await openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
+      const response = await client.chat.completions.create({
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
@@ -296,6 +298,124 @@ app.post('/api/ai-advice', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'AI 조언 생성 중 오류가 발생했습니다.',
+      error: error.message,
+    });
+  }
+});
+
+// AI 채팅 API (대화형)
+app.post('/api/ai-chat', async (req, res) => {
+  try {
+    console.log('📥 AI 채팅 요청 받음');
+    const userId = req.headers['x-user-id'] || req.body.userId || null;
+    const { messages, compatibilityContext } = req.body;
+
+    console.log('📝 요청 데이터:', {
+      messageCount: messages?.length || 0,
+      hasContext: !!compatibilityContext,
+      userId: userId || '없음',
+    });
+
+    // 입력값 검증
+    if (!messages || !Array.isArray(messages) || messages.length === 0) {
+      console.error('❌ 메시지 검증 실패: 메시지가 없거나 배열이 아님');
+      return res.status(400).json({
+        success: false,
+        message: '메시지가 필요합니다.',
+      });
+    }
+
+    // OpenAI API 키 확인
+    const openaiApiKey = process.env.OPENAI_API_KEY;
+    if (!openaiApiKey) {
+      return res.status(500).json({
+        success: false,
+        message: 'OpenAI API 키가 설정되지 않았습니다.',
+      });
+    }
+
+    try {
+      const client = new OpenAI({
+        apiKey: openaiApiKey,
+      });
+
+      // 시스템 메시지 구성 (궁합 컨텍스트 포함)
+      const systemMessage = {
+        role: 'system',
+        content: '당신은 사주 팔자 전문가입니다. 궁합 결과를 분석하여 실용적이고 긍정적인 조언을 제공합니다.',
+      };
+
+      // 궁합 컨텍스트가 있으면 시스템 메시지에 추가
+      if (compatibilityContext) {
+        const { score, explanation, salAnalysis, user1, user2 } = compatibilityContext;
+        let contextText = `다음 궁합 결과에 대해 대화하고 있습니다:\n\n`;
+        contextText += `궁합 점수: ${score}점\n`;
+        contextText += `설명: ${explanation}\n`;
+        
+        if (salAnalysis && salAnalysis.length > 0) {
+          contextText += `\n감점 요소:\n`;
+          salAnalysis.forEach((sal) => {
+            if (sal.count > 0) {
+              contextText += `- ${sal.type}: ${sal.count}개\n`;
+            }
+          });
+        }
+        
+        if (user1 && user2) {
+          contextText += `\n이용자 정보:\n`;
+          contextText += `- ${user1.name || '이용자1'} (${user1.gender || '성별 불명'})\n`;
+          contextText += `- ${user2.name || '이용자2'} (${user2.gender || '성별 불명'})\n`;
+        }
+        
+        systemMessage.content += `\n\n${contextText}`;
+      }
+
+      // 메시지 배열 구성 (시스템 메시지 + 사용자 메시지들)
+      const chatMessages = [
+        systemMessage,
+        ...messages.map((msg) => ({
+          role: msg.role || 'user',
+          content: msg.content,
+        })),
+      ];
+
+      console.log('🤖 AI 채팅 API 호출 시작...', { messageCount: messages.length });
+      
+      const response = await client.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: chatMessages,
+        max_tokens: 500,
+        temperature: 0.7,
+      });
+
+      const aiResponse = response.choices[0]?.message?.content || '';
+      console.log('✅ AI 채팅 API 호출 성공');
+
+      res.json({
+        success: true,
+        data: {
+          message: aiResponse,
+        },
+      });
+    } catch (openaiError) {
+      console.error('❌ OpenAI 채팅 API 호출 실패:', openaiError.message);
+      console.error('   오류 상세:', openaiError);
+      
+      if (openaiError.status === 429) {
+        console.error('⚠️ OpenAI API 할당량 초과 또는 결제 정보 확인 필요');
+      }
+      
+      return res.status(500).json({
+        success: false,
+        message: 'AI 응답 생성 중 오류가 발생했습니다.',
+        error: openaiError.message,
+      });
+    }
+  } catch (error) {
+    console.error('AI 채팅 오류:', error);
+    res.status(500).json({
+      success: false,
+      message: 'AI 채팅 중 오류가 발생했습니다.',
       error: error.message,
     });
   }

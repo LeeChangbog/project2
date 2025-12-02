@@ -8,9 +8,21 @@ import { authAPI } from '@/utils/apiClient';
 import React, { createContext, ReactNode, useContext, useState } from 'react';
 
 // 백엔드 API 사용 여부 확인
-// 배포 환경(웹)에서는 항상 백엔드 API 사용, 로컬 개발 환경에서는 환경 변수 확인
-const isProduction = typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
-const USE_BACKEND_API = isProduction || process.env.EXPO_PUBLIC_USE_BACKEND_API === 'true';
+// 환경 변수를 우선 사용하고, 없으면 기본값으로 true (프로덕션 환경에서는 항상 백엔드 API 사용)
+// window 체크는 클라이언트 측에서만 실행되도록 함수 내부로 이동
+const getUseBackendAPI = (): boolean => {
+  // 환경 변수가 명시적으로 설정되어 있으면 그 값 사용
+  if (process.env.EXPO_PUBLIC_USE_BACKEND_API !== undefined) {
+    return process.env.EXPO_PUBLIC_USE_BACKEND_API === 'true';
+  }
+  // 환경 변수가 없으면 클라이언트 측에서만 hostname 체크 (SSR 호환)
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    return hostname !== 'localhost' && hostname !== '127.0.0.1';
+  }
+  // 서버 측에서는 기본값으로 true 반환 (프로덕션 환경 가정)
+  return true;
+};
 
 /**
  * 사용자 정보 타입
@@ -56,6 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    */
   const login = async (email: string, password: string): Promise<{ success: boolean; message?: string }> => {
     try {
+      const USE_BACKEND_API = getUseBackendAPI();
       if (USE_BACKEND_API) {
         // 백엔드 API 호출
         const response = await authAPI.login(email, password);
@@ -102,6 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    * 로그아웃 함수
    */
   const logout = async () => {
+    const USE_BACKEND_API = getUseBackendAPI();
     if (USE_BACKEND_API) {
       await authAPI.logout();
     }
@@ -126,6 +140,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user || !profile) return false;
 
     try {
+      const USE_BACKEND_API = getUseBackendAPI();
       if (USE_BACKEND_API) {
         // 백엔드 API 호출
         const response = await authAPI.updateProfile(profile);

@@ -1,0 +1,21 @@
+# Netlify 배포 설정 파일
+
+[build]
+  # 빌드 명령어
+  command = "npm run build:web"
+  # 빌드 결과물 디렉토리
+  publish = "web-build"
+
+# 리다이렉트 설정 (SPA 라우팅 지원)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# 환경 변수는 Netlify 대시보드에서 설정해야 합니다:
+# Site settings > Environment variables
+# 
+# 필수 환경 변수:
+# - EXPO_PUBLIC_API_BASE_URL: 백엔드 API URL (예: https://your-backend-api.com)
+# - EXPO_PUBLIC_USE_BACKEND_API: "true"로 설정
+

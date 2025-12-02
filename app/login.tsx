@@ -48,8 +48,16 @@ export default function LoginScreen() {
       setLoading(true);
       
       // 배포 환경에서는 항상 백엔드 API 사용
-      const isProduction = typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
-      const USE_BACKEND_API = isProduction || process.env.EXPO_PUBLIC_USE_BACKEND_API === 'true';
+      // window 체크는 클라이언트 측에서만 실행 (SSR 호환)
+      let USE_BACKEND_API = process.env.EXPO_PUBLIC_USE_BACKEND_API === 'true';
+      if (!USE_BACKEND_API && typeof window !== 'undefined') {
+        const hostname = window.location.hostname;
+        USE_BACKEND_API = hostname !== 'localhost' && hostname !== '127.0.0.1';
+      }
+      // 환경 변수도 없고 window도 없으면 기본값으로 true (프로덕션 환경 가정)
+      if (!USE_BACKEND_API && typeof window === 'undefined') {
+        USE_BACKEND_API = true;
+      }
       
       if (!USE_BACKEND_API) {
         showAlert('오류', '백엔드 API가 설정되지 않았습니다. 환경 변수를 확인해주세요.');
