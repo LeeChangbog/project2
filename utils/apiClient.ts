@@ -136,10 +136,21 @@ export const authAPI = {
         body: JSON.stringify({ email, password }),
       });
 
-      if (response.success && response.token) {
+      // 응답 검증: response가 없거나 형식이 올바르지 않으면 실패 처리
+      if (!response || typeof response !== 'object') {
+        console.error('❌ login API 응답 형식 오류:', response);
+        return {
+          success: false,
+          message: '서버 응답 형식이 올바르지 않습니다.',
+        };
+      }
+
+      // success가 명시적으로 true이고 token이 있을 때만 토큰 저장
+      if (response.success === true && response.token) {
         await setAuthToken(response.token);
       }
 
+      // 응답 그대로 반환 (success가 false여도 반환하여 상세 에러 메시지 전달)
       return response;
     } catch (error: any) {
       console.error('❌ login API 오류:', error);
@@ -174,17 +185,30 @@ export const authAPI = {
 
       console.log('📥 signup API 응답:', response);
 
-      if (response.success && response.token) {
+      // 응답 검증: response가 없거나 형식이 올바르지 않으면 실패 처리
+      if (!response || typeof response !== 'object') {
+        console.error('❌ signup API 응답 형식 오류:', response);
+        return {
+          success: false,
+          message: '서버 응답 형식이 올바르지 않습니다.',
+        };
+      }
+
+      // success가 명시적으로 true이고 token이 있을 때만 토큰 저장
+      if (response.success === true && response.token) {
         await setAuthToken(response.token);
       }
 
+      // 응답 그대로 반환 (success가 false여도 반환하여 상세 에러 메시지 전달)
       return response;
     } catch (error: any) {
       console.error('❌ signup API 오류:', error);
-      // API 요청 실패 시 에러 메시지 포함하여 반환
+      // API 요청 실패 시 (네트워크 오류, 서버 오류 등)
+      // 에러 메시지에서 실제 백엔드 응답 메시지 추출 시도
+      const errorMessage = error?.response?.message || error?.message || '회원가입 중 오류가 발생했습니다.';
       return {
         success: false,
-        message: error?.message || '회원가입 중 오류가 발생했습니다.',
+        message: errorMessage,
       };
     }
   },

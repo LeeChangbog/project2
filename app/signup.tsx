@@ -55,51 +55,42 @@ export default function SignupScreen() {
     try {
       setLoading(true);
       
-      // 회원가입 API 호출
       // 배포 환경에서는 항상 백엔드 API 사용
       const isProduction = typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
       const USE_BACKEND_API = isProduction || process.env.EXPO_PUBLIC_USE_BACKEND_API === 'true';
-      console.log('🔍 회원가입 시작:', { email, USE_BACKEND_API, isProduction, API_URL: process.env.EXPO_PUBLIC_API_BASE_URL });
       
       if (!USE_BACKEND_API) {
         showAlert('오류', '백엔드 API가 설정되지 않았습니다. 환경 변수를 확인해주세요.');
+        setLoading(false);
         return;
       }
       
-      if (USE_BACKEND_API) {
-        console.log('📤 회원가입 API 호출 중...');
-        const response = await authAPI.signup(email, password);
-        console.log('📥 회원가입 API 응답:', response);
-        
-        if (response && response.success) {
-          console.log('✅ 회원가입 성공, 자동 로그인 시도...');
-          // 회원가입 성공 시 자동 로그인
-          const loginResult = await login(email, password);
-          console.log('📥 로그인 결과:', loginResult);
-          
-          if (loginResult && loginResult.success) {
-            showAlert('회원가입 성공', '회원가입이 완료되었습니다.');
-            // 팝업 표시 후 홈 화면으로 자동 이동
-            setTimeout(() => {
-              router.replace('/(tabs)');
-            }, 500);
-          } else {
-            showAlert('회원가입 성공', '회원가입이 완료되었습니다. 로그인해주세요.');
-            // 팝업 표시 후 로그인 화면으로 자동 이동
-            setTimeout(() => {
-              router.replace('/login');
-            }, 500);
-          }
-        } else {
-          // 백엔드에서 반환한 구체적인 에러 메시지 표시
-          const errorMessage = response?.message || '회원가입 중 오류가 발생했습니다.';
-          console.error('❌ 회원가입 실패:', errorMessage);
-          showAlert('회원가입 실패', errorMessage);
-        }
-      } else {
-        console.log('⚠️ 백엔드 API 미사용 모드');
-        // 백엔드 미사용 시 임시 처리
+      // 회원가입 API 호출
+      console.log('📤 회원가입 API 호출 중...');
+      const response = await authAPI.signup(email, password);
+      console.log('📥 회원가입 API 응답:', response);
+      
+      if (!response || !response.success) {
+        // 백엔드에서 반환한 구체적인 에러 메시지 표시
+        const errorMessage = response?.message || '회원가입 중 오류가 발생했습니다.';
+        console.error('❌ 회원가입 실패:', errorMessage);
+        showAlert('회원가입 실패', errorMessage);
+        return;
+      }
+      
+      // 회원가입 성공 시 자동 로그인 시도
+      console.log('✅ 회원가입 성공, 자동 로그인 시도...');
+      const loginResult = await login(email, password);
+      console.log('📥 로그인 결과:', loginResult);
+      
+      if (loginResult && loginResult.success) {
         showAlert('회원가입 성공', '회원가입이 완료되었습니다.');
+        // 팝업 표시 후 홈 화면으로 자동 이동
+        setTimeout(() => {
+          router.replace('/(tabs)');
+        }, 500);
+      } else {
+        showAlert('회원가입 성공', '회원가입이 완료되었습니다. 로그인해주세요.');
         // 팝업 표시 후 로그인 화면으로 자동 이동
         setTimeout(() => {
           router.replace('/login');

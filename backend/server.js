@@ -317,6 +317,7 @@ app.post('/api/auth/login', async (req, res) => {
     // 데이터베이스에서 사용자 확인
     const user = await User.findOne({ email: email.toLowerCase().trim() });
     if (!user) {
+      console.log(`❌ 로그인 시도 실패: 등록되지 않은 이메일 - ${email}`);
       return res.status(401).json({
         success: false,
         message: '등록되지 않은 이메일입니다.',
@@ -324,13 +325,24 @@ app.post('/api/auth/login', async (req, res) => {
     }
 
     // 비밀번호 확인 (TODO: bcrypt로 해시 비교 필요)
-    if (user.password !== password) {
+    if (!user.password || user.password !== password) {
+      console.log(`❌ 로그인 시도 실패: 비밀번호 불일치 - ${email}`);
       return res.status(401).json({
         success: false,
         message: '비밀번호가 올바르지 않습니다.',
       });
     }
 
+    // 사용자 정보 검증
+    if (!user._id || !user.email) {
+      console.error('❌ 로그인 오류: 사용자 정보가 올바르지 않습니다.', { userId: user._id, email: user.email });
+      return res.status(500).json({
+        success: false,
+        message: '사용자 정보를 가져오는 중 오류가 발생했습니다.',
+      });
+    }
+
+    console.log(`✅ 로그인 성공: ${email} (ID: ${user._id})`);
     res.json({
       success: true,
       token: `token-${user._id}`, // TODO: JWT 토큰 생성 필요
@@ -355,17 +367,31 @@ app.post('/api/auth/signup', async (req, res) => {
   try {
     const { email, password, name } = req.body;
 
+    console.log('📥 회원가입 요청 받음:', { email, name: name || '없음' });
+
     // 입력값 검증
     if (!email || !password) {
+      console.log('❌ 회원가입 실패: 이메일 또는 비밀번호 누락');
       return res.status(400).json({
         success: false,
         message: '이메일과 비밀번호를 입력해주세요.',
       });
     }
 
+    // 이메일 형식 검증
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      console.log('❌ 회원가입 실패: 이메일 형식 오류', email);
+      return res.status(400).json({
+        success: false,
+        message: '올바른 이메일 형식을 입력해주세요.',
+      });
+    }
+
     // 이메일 중복 확인
     const existingUser = await User.findOne({ email: email.toLowerCase().trim() });
     if (existingUser) {
+      console.log('❌ 회원가입 실패: 이미 등록된 이메일', email);
       return res.status(400).json({
         success: false,
         message: '이미 등록된 이메일입니다.',
@@ -386,6 +412,7 @@ app.post('/api/auth/signup', async (req, res) => {
     });
 
     await newUser.save();
+    console.log('✅ 회원가입 성공:', { email, userId: newUser._id });
 
     res.json({
       success: true,
@@ -398,8 +425,18 @@ app.post('/api/auth/signup', async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('회원가입 오류:', error);
-    console.error('에러 스택:', error.stack);
+    console.error('❌ 회원가입 오류:', error);
+    console.error('   에러 메시지:', error.message);
+    console.error('   에러 스택:', error.stack);
+    
+    // MongoDB 중복 키 오류 처리
+    if (error.code === 11000 || error.name === 'MongoServerError') {
+      return res.status(400).json({
+        success: false,
+        message: '이미 등록된 이메일입니다.',
+      });
+    }
+    
     res.status(500).json({
       success: false,
       message: '회원가입 중 오류가 발생했습니다.',

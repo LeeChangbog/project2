@@ -60,18 +60,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // 백엔드 API 호출
         const response = await authAPI.login(email, password);
         
-        if (response.success && response.user) {
-          setUser({
-            id: response.user.id || email,
-            email: response.user.email || email,
-            name: response.user.name,
-            profile: response.user.profile,
-          });
-          return { success: true };
-        } else {
-          console.error('로그인 실패:', response.message);
-          return { success: false, message: response.message || '로그인에 실패했습니다.' };
+        // 응답 검증: response가 없거나 success가 명시적으로 true가 아니면 실패
+        if (!response || response.success !== true || !response.user) {
+          const errorMessage = response?.message || '로그인에 실패했습니다.';
+          console.error('로그인 실패:', errorMessage, { response });
+          return { success: false, message: errorMessage };
         }
+        
+        // 사용자 정보 검증: 필수 필드 확인
+        if (!response.user.id && !response.user.email) {
+          console.error('로그인 실패: 사용자 정보가 올바르지 않습니다.', response.user);
+          return { success: false, message: '사용자 정보를 가져오는 중 오류가 발생했습니다.' };
+        }
+        
+        // 로그인 성공: 사용자 정보 저장
+        setUser({
+          id: response.user.id || email,
+          email: response.user.email || email,
+          name: response.user.name,
+          profile: response.user.profile,
+        });
+        return { success: true };
       } else {
         // 백엔드 API가 비활성화된 경우 - 프로덕션에서는 허용하지 않음
         console.error('⚠️ 백엔드 API가 비활성화되어 있습니다. 프로덕션 환경에서는 백엔드 API를 사용해야 합니다.');
