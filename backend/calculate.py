@@ -98,7 +98,7 @@ def calculate_earth(i, j):
     return pred
 
 def calculate(token0, token1, gender0, gender1, score):
-    """살 계산 및 감점 (hd5.py의 완전한 로직 사용)"""
+    """살 계산 및 감점 (각 살이 독립적으로 계산되도록 수정)"""
     # score가 numpy array인 경우 item()으로 변환, 아니면 float로 변환
     if hasattr(score, 'item'):
         score = score.item()
@@ -122,7 +122,9 @@ def calculate(token0, token1, gender0, gender1, score):
     # 살 계산 전 카운터
     sal_count_before = sum(sal0) + sum(sal1)
 
-    # 살 0 계산 (hd5.py의 완전한 로직)
+    # ============================================
+    # 살 0 계산 (독립적으로 계산 - elif 사용 없음)
+    # ============================================
     if a3==3:
         if a1==6 or a1==9:
             if gender0==1:
@@ -214,7 +216,9 @@ def calculate(token0, token1, gender0, gender1, score):
                 score -= p11
                 sal1[0] += p11
 
-    # 살 1 계산 (hd5.py의 완전한 로직)
+    # ============================================
+    # 살 1 계산 (독립적으로 계산 - elif 사용 없음)
+    # ============================================
     if a3==1:
         if a1==10 or a2==10:
             if gender0==1:
@@ -419,7 +423,9 @@ def calculate(token0, token1, gender0, gender1, score):
             score -= p21
             sal1[1] += p21
 
-    # 살 2 계산 (hd5.py의 완전한 로직) - 인덱스 2에 저장
+    # ============================================
+    # 살 2 계산 (독립적으로 계산 - elif 사용 없음) - 인덱스 2에 저장
+    # ============================================
     if a1==1:
         if a2==8:
             score -= p3
@@ -925,7 +931,9 @@ def calculate(token0, token1, gender0, gender1, score):
             score -= p3
             sal1[2] += p3
     
-    # 살 3 계산 (인덱스 3에 저장) - hd5.py의 852-875 라인
+    # ============================================
+    # 살 3 계산 (독립적으로 계산 - elif 사용 없음) - 인덱스 3에 저장
+    # ============================================
     t = abs(a3-a2)
     if t == 6:
         score -= p41
@@ -951,7 +959,9 @@ def calculate(token0, token1, gender0, gender1, score):
         score -= p43
         sal1[3] += p43
 
-    # 살 4 계산 (인덱스 4에 저장) - hd5.py의 878-954 라인
+    # ============================================
+    # 살 4 계산 (독립적으로 계산 - elif 사용 없음) - 인덱스 4에 저장
+    # ============================================
     if a3==1:
         if a1==4 or a2==4:
             score -= p5
@@ -1030,7 +1040,9 @@ def calculate(token0, token1, gender0, gender1, score):
         score -= p5
         sal1[4] += p5
 
-    # 살 5 계산 (인덱스 5에 저장) - hd5.py의 956-993 라인
+    # ============================================
+    # 살 5 계산 (독립적으로 계산 - elif 사용 없음) - 인덱스 5에 저장
+    # ============================================
     if a3==7:
         if a1==4 or a2==4:
             score -= p6
@@ -1070,7 +1082,9 @@ def calculate(token0, token1, gender0, gender1, score):
         score -= p6
         sal1[5] += p6
 
-    # 살 6 계산 (인덱스 6에 저장) - hd5.py의 996-1010 라인
+    # ============================================
+    # 살 6 계산 (독립적으로 계산 - elif 사용 없음) - 인덱스 6에 저장
+    # ============================================
     if (token0[4]==5 and a3==5) or (token0[4]==4 and a3==2) or (token0[4]==3 and a3==11) or (token0[4]==2 and a3==8) or (token0[4]==1 and a3==5) or (token0[4]==10 and a3==2) or (token0[4]==9 and a3==11):
         if gender0==1:
             score -= p7
@@ -1087,7 +1101,9 @@ def calculate(token0, token1, gender0, gender1, score):
             score -= p71
             sal1[6] += p71
 
-    # 살 7 계산 (인덱스 7에 저장) - hd5.py의 1012-1034 라인
+    # ============================================
+    # 살 7 계산 (독립적으로 계산 - elif 사용 없음) - 인덱스 7에 저장
+    # ============================================
     if (gender0 != 1) and ((token0[4] == 9 and a3 == 5) or (token0[4] == 5 and a3 == 11) or (token0[4] == 7 and a3 == 5) or (token0[4] == 7 and a3 == 11)):
         score -= p81
         sal0[7] += p81
