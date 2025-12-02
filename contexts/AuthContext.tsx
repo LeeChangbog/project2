@@ -31,7 +31,7 @@ export interface AuthUser {
 interface AuthContextType {
   user: AuthUser | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<{ success: boolean; message?: string }>;
   logout: () => void;
   updateProfile: (profile: AuthUser['profile']) => void;
 }
@@ -50,8 +50,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    * 로그인 함수
    * - 백엔드 API 사용 시: 실제 서버와 통신
    * - 백엔드 미사용 시: 로컬 스토리지 기반 임시 로그인
+   * @returns {Promise<{ success: boolean; message?: string }>} 로그인 결과와 메시지
    */
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (email: string, password: string): Promise<{ success: boolean; message?: string }> => {
     try {
       if (USE_BACKEND_API) {
         // 백엔드 API 호출
@@ -64,10 +65,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             name: response.user.name,
             profile: response.user.profile,
           });
-          return true;
+          return { success: true };
         } else {
           console.error('로그인 실패:', response.message);
-          return false;
+          return { success: false, message: response.message || '로그인에 실패했습니다.' };
         }
       } else {
         // 임시: 로컬 로그인 (백엔드 미사용 시)
@@ -89,11 +90,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           profile: profile || undefined,
         });
 
-        return true;
+        return { success: true };
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('로그인 실패:', error);
-      return false;
+      return { 
+        success: false, 
+        message: error?.message || '로그인 중 오류가 발생했습니다.' 
+      };
     }
   };
 
@@ -119,9 +123,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   /**
    * 프로필 업데이트 함수
+   * @returns {Promise<boolean>} 성공 여부
    */
-  const updateProfile = async (profile: AuthUser['profile']) => {
-    if (!user || !profile) return;
+  const updateProfile = async (profile: AuthUser['profile']): Promise<boolean> => {
+    if (!user || !profile) return false;
 
     try {
       if (USE_BACKEND_API) {
@@ -133,8 +138,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             ...user,
             profile: response.user.profile || profile,
           });
+          return true;
         } else {
           console.error('프로필 업데이트 실패');
+          return false;
         }
       } else {
         // 로컬 스토리지에 저장 (백엔드 미사용 시)
@@ -150,9 +157,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           ...user,
           profile,
         });
+        return true;
       }
     } catch (error) {
       console.error('프로필 업데이트 실패:', error);
+      return false;
     }
   };
 

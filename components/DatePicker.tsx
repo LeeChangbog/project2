@@ -82,6 +82,15 @@ export function DatePicker({ value, onChange, placeholder, colorScheme }: DatePi
         // 숫자와 하이픈만 허용
         let formatted = text.replace(/[^\d-]/g, '');
         
+        // 년도 부분: 4자리로 제한
+        if (formatted.length > 0 && formatted[0] !== '-') {
+          const yearPart = formatted.split('-')[0];
+          if (yearPart.length > 4) {
+            // 년도가 4자리를 넘으면 4자리로 자르고 나머지 부분 유지
+            formatted = yearPart.slice(0, 4) + (formatted.length > 4 ? '-' + formatted.slice(5) : '');
+          }
+        }
+        
         // YYYY-MM-DD 형식으로 자동 포맷팅
         if (formatted.length > 4 && formatted[4] !== '-') {
           formatted = formatted.slice(0, 4) + '-' + formatted.slice(4);
@@ -93,6 +102,37 @@ export function DatePicker({ value, onChange, placeholder, colorScheme }: DatePi
         // 최대 길이 제한 (YYYY-MM-DD = 10자)
         if (formatted.length > 10) {
           formatted = formatted.slice(0, 10);
+        }
+        
+        // 월과 일 유효성 검증
+        const parts = formatted.split('-');
+        if (parts.length >= 2) {
+          const month = parseInt(parts[1], 10);
+          if (!isNaN(month)) {
+            if (month > 12) {
+              // 월이 12를 넘으면 12로 제한
+              parts[1] = '12';
+              formatted = parts.join('-');
+            } else if (month < 1 && parts[1].length === 2) {
+              // 월이 01 미만이면 01로 설정
+              parts[1] = '01';
+              formatted = parts.join('-');
+            }
+          }
+        }
+        if (parts.length >= 3) {
+          const day = parseInt(parts[2], 10);
+          if (!isNaN(day)) {
+            if (day > 31) {
+              // 일이 31을 넘으면 31로 제한
+              parts[2] = '31';
+              formatted = parts.join('-');
+            } else if (day < 1 && parts[2].length === 2) {
+              // 일이 01 미만이면 01로 설정
+              parts[2] = '01';
+              formatted = parts.join('-');
+            }
+          }
         }
         
         onChange(formatted);

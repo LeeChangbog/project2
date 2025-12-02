@@ -347,6 +347,8 @@ export async function calculateCompatibility(
     originalScore: resultData.originalScore,
     finalScore: resultData.finalScore,
     fallback: resultData.fallback || false,
+    sal0: backendSal0,
+    sal1: backendSal1,
   });
   
   const salResult = {
@@ -354,6 +356,13 @@ export async function calculateCompatibility(
     sal1: backendSal1,
     totalDeduction: (resultData.originalScore || 100) - score,
   };
+  
+  console.log('살 데이터:', {
+    sal0: salResult.sal0,
+    sal1: salResult.sal1,
+    sal0Sum: salResult.sal0.reduce((a, b) => a + b, 0),
+    sal1Sum: salResult.sal1.reduce((a, b) => a + b, 0),
+  });
   
   // 5. 살 분석 결과를 SalAnalysis 형식으로 변환
   const salAnalysis: SalAnalysis[] = [];
@@ -368,36 +377,38 @@ export async function calculateCompatibility(
     '의지 솔직 직설 개성 고집 독립심',
   ];
   
-  // 첫 번째 사람의 살
+  // 첫 번째 사람의 살과 두 번째 사람의 살을 합산
+  // 모든 인덱스에 대해 처리 (그래프 표시를 위해 모든 인덱스 포함)
+  console.log('🔍 살 계산 결과 (백엔드에서 받은 원본 데이터):');
+  console.log('  sal0:', salResult.sal0);
+  console.log('  sal1:', salResult.sal1);
+  
   for (let i = 0; i < 8; i++) {
-    if (salResult.sal0[i] > 0) {
-      salAnalysis.push({
-        type: salNames[i],
-        count: Math.round(salResult.sal0[i]),
-        description: `${salNames[i]} 살이 ${Math.round(salResult.sal0[i])}점 감점되었습니다.`,
-      });
-    }
+    const sal0Value = salResult.sal0[i] || 0;
+    const sal1Value = salResult.sal1[i] || 0;
+    const totalCount = sal0Value + sal1Value;
+    
+    // 모든 인덱스에 대해 salAnalysis에 추가 (값이 0이어도 포함)
+    // 그래프에서 8개 모두 표시하기 위해 필요
+    salAnalysis.push({
+      type: salNames[i],
+      count: totalCount,
+      description: totalCount > 0 
+        ? `${salNames[i]} 살이 총 ${totalCount.toFixed(1)}점 감점되었습니다.`
+        : `${salNames[i]} 살이 없습니다.`,
+    });
+    
+    // 디버깅: 모든 살 값 로그 출력 (0이어도)
+    console.log(`  살 ${i} (${salNames[i]}): sal0=${sal0Value}, sal1=${sal1Value}, total=${totalCount}`);
   }
   
-  // 두 번째 사람의 살
-  for (let i = 0; i < 8; i++) {
-    if (salResult.sal1[i] > 0) {
-      const existing = salAnalysis.find((s) => s.type === salNames[i]);
-      if (existing) {
-        existing.count += Math.round(salResult.sal1[i]);
-        existing.description = `${salNames[i]} 살이 총 ${existing.count}점 감점되었습니다.`;
-      } else {
-        salAnalysis.push({
-          type: salNames[i],
-          count: Math.round(salResult.sal1[i]),
-          description: `${salNames[i]} 살이 ${Math.round(salResult.sal1[i])}점 감점되었습니다.`,
-        });
-      }
-    }
-  }
+  console.log('📊 salAnalysis 생성 완료:', salAnalysis.map(s => ({ type: s.type, count: s.count })));
   
-  // 6. 점수 범위 조정: 0-100점 사이로 제한
+  console.log('살 분석 결과:', salAnalysis.map(s => ({ type: s.type, count: s.count })));
+  
+  // 6. 점수 범위 조정: 0-100점 사이로 제한 및 소수점 한 자리로 반올림
   score = Math.max(0, Math.min(100, score));
+  score = Number(score.toFixed(1));
   
   // 12. 점수에 따른 설명 생성
   let explanation = '';

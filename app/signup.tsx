@@ -12,7 +12,8 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { authAPI } from '@/utils/apiClient';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
+import { Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
+import { showAlert } from '@/utils/alert';
 
 export default function SignupScreen() {
   const router = useRouter();
@@ -28,26 +29,26 @@ export default function SignupScreen() {
   const handleSignup = async () => {
     // 입력값 검증
     if (!email || !password || !confirmPassword) {
-      Alert.alert('입력 오류', '모든 항목을 입력해주세요.');
+      showAlert('입력 오류', '모든 항목을 입력해주세요.');
       return;
     }
 
     // 이메일 형식 검증
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      Alert.alert('입력 오류', '올바른 이메일 형식을 입력해주세요.');
+      showAlert('입력 오류', '올바른 이메일 형식을 입력해주세요.');
       return;
     }
 
     // 비밀번호 길이 검증
     if (password.length < 6) {
-      Alert.alert('입력 오류', '비밀번호는 최소 6자 이상이어야 합니다.');
+      showAlert('입력 오류', '비밀번호는 최소 6자 이상이어야 합니다.');
       return;
     }
 
     // 비밀번호 확인
     if (password !== confirmPassword) {
-      Alert.alert('입력 오류', '비밀번호가 일치하지 않습니다.');
+      showAlert('입력 오류', '비밀번호가 일치하지 않습니다.');
       return;
     }
 
@@ -56,44 +57,50 @@ export default function SignupScreen() {
       
       // 회원가입 API 호출
       const USE_BACKEND_API = process.env.EXPO_PUBLIC_USE_BACKEND_API === 'true';
+      console.log('🔍 회원가입 시작:', { email, USE_BACKEND_API });
       
       if (USE_BACKEND_API) {
+        console.log('📤 회원가입 API 호출 중...');
         const response = await authAPI.signup(email, password);
+        console.log('📥 회원가입 API 응답:', response);
         
-        if (response.success) {
+        if (response && response.success) {
+          console.log('✅ 회원가입 성공, 자동 로그인 시도...');
           // 회원가입 성공 시 자동 로그인
-          const loginSuccess = await login(email, password);
+          const loginResult = await login(email, password);
+          console.log('📥 로그인 결과:', loginResult);
           
-          if (loginSuccess) {
-            Alert.alert('회원가입 성공', '회원가입이 완료되었습니다.', [
-              {
-                text: '확인',
-                onPress: () => router.replace('/(tabs)'),
-              },
-            ]);
+          if (loginResult && loginResult.success) {
+            showAlert('회원가입 성공', '회원가입이 완료되었습니다.');
+            // 팝업 표시 후 홈 화면으로 자동 이동
+            setTimeout(() => {
+              router.replace('/(tabs)');
+            }, 500);
           } else {
-            Alert.alert('회원가입 성공', '회원가입이 완료되었습니다. 로그인해주세요.', [
-              {
-                text: '확인',
-                onPress: () => router.replace('/login'),
-              },
-            ]);
+            showAlert('회원가입 성공', '회원가입이 완료되었습니다. 로그인해주세요.');
+            // 팝업 표시 후 로그인 화면으로 자동 이동
+            setTimeout(() => {
+              router.replace('/login');
+            }, 500);
           }
         } else {
-          Alert.alert('회원가입 실패', response.message || '회원가입 중 오류가 발생했습니다.');
+          // 백엔드에서 반환한 구체적인 에러 메시지 표시
+          const errorMessage = response?.message || '회원가입 중 오류가 발생했습니다.';
+          console.error('❌ 회원가입 실패:', errorMessage);
+          showAlert('회원가입 실패', errorMessage);
         }
       } else {
+        console.log('⚠️ 백엔드 API 미사용 모드');
         // 백엔드 미사용 시 임시 처리
-        Alert.alert('회원가입 성공', '회원가입이 완료되었습니다.', [
-          {
-            text: '확인',
-            onPress: () => router.replace('/login'),
-          },
-        ]);
+        showAlert('회원가입 성공', '회원가입이 완료되었습니다.');
+        // 팝업 표시 후 로그인 화면으로 자동 이동
+        setTimeout(() => {
+          router.replace('/login');
+        }, 500);
       }
     } catch (error) {
-      console.error('회원가입 오류:', error);
-      Alert.alert('오류', '회원가입 중 오류가 발생했습니다.');
+      console.error('❌ 회원가입 오류:', error);
+      showAlert('오류', `회원가입 중 오류가 발생했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
     } finally {
       setLoading(false);
     }

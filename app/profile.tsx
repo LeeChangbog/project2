@@ -12,7 +12,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
+import { Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
+import { showAlert } from '@/utils/alert';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -35,35 +36,45 @@ export default function ProfileScreen() {
   }, [user]);
 
   // 프로필 저장
-  const handleSave = () => {
+  const handleSave = async () => {
     // 입력값 검증
     if (!name || !birthDate || !gender) {
-      Alert.alert('입력 오류', '이름, 생년월일, 성별은 필수 입력 항목입니다.');
+      showAlert('입력 오류', '이름, 생년월일, 성별은 필수 입력 항목입니다.');
       return;
     }
 
     // 이름 한글 검증
     const koreanOnly = name.replace(/[^가-힣\s]/g, '');
     if (koreanOnly !== name) {
-      Alert.alert('입력 오류', '이름은 한글만 입력 가능합니다.');
+      showAlert('입력 오류', '이름은 한글만 입력 가능합니다.');
       setName(koreanOnly);
       return;
     }
 
-    // 프로필 저장
-    updateProfile({
-      name: koreanOnly,
-      birthDate,
-      birthTime: '', // 시간은 사용하지 않음
-      gender,
-    });
+    try {
+      // 프로필 저장
+      const success = await updateProfile({
+        name: koreanOnly,
+        birthDate,
+        birthTime: '', // 시간은 사용하지 않음
+        gender,
+      });
 
-    Alert.alert('저장 완료', '프로필 정보가 저장되었습니다.', [
-      {
-        text: '확인',
-        onPress: () => router.back(),
-      },
-    ]);
+      if (success) {
+        // 저장 완료 팝업 표시
+        showAlert('저장 완료', '프로필 정보가 저장되었습니다.');
+        
+        // 팝업 표시 후 이전 화면으로 이동
+        setTimeout(() => {
+          router.back();
+        }, 500);
+      } else {
+        showAlert('저장 실패', '프로필 정보 저장 중 오류가 발생했습니다.');
+      }
+    } catch (error) {
+      console.error('프로필 저장 오류:', error);
+      showAlert('저장 실패', '프로필 정보 저장 중 오류가 발생했습니다.');
+    }
   };
 
   return (

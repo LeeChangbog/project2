@@ -14,7 +14,8 @@ import { useUserData } from '@/contexts/UserDataContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
+import { Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
+import { showAlert } from '@/utils/alert';
 
 export default function InputScreen() {
   const router = useRouter();
@@ -36,7 +37,7 @@ export default function InputScreen() {
    */
   const handleLoadMyProfile = () => {
     if (!user || !user.profile) {
-      Alert.alert('알림', '로그인 후 이용 가능합니다.');
+      showAlert('알림', '로그인 후 이용 가능합니다.');
       return;
     }
 
@@ -49,7 +50,7 @@ export default function InputScreen() {
         gender: user.profile.gender || '',
       });
       
-      Alert.alert('완료', '내 정보가 불러와졌습니다.');
+      showAlert('완료', '내 정보가 불러와졌습니다.');
     }
   };
 

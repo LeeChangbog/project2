@@ -205,48 +205,48 @@ def calculate(token0, token1, gender0, gender1, score):
     # 살 1 계산 (간소화 - 전체 로직은 원본 Python 코드 참조)
     # 여기서는 주요 로직만 포함
     
-    # 살 2 계산
+    # 살 2 계산 (인덱스 2에 저장)
     if (a1==1 and a2==10) or (a1==2 and a2==7) or (a1==3 and a2==8) or (a1==4 and a2==9) or (a1==5 and a2==12) or (a1==6 and a2==11) or (a1==10 and a2==1) or (a1==7 and a2==2) or (a1==8 and a2==3) or (a1==9 and a2==4) or (a1==12 and a2==5) or (a1==11 and a2==6):
         if gender0==1:
             score -= p2
-            sal0[1] += p2
+            sal0[2] += p2  # 살 2는 인덱스 2에 저장
         else:
             score -= p21
-            sal0[1] += p21
+            sal0[2] += p21  # 살 2는 인덱스 2에 저장
     if (b1==1 and b2==10) or (b1==2 and b2==7) or (b1==3 and b2==8) or (b1==4 and b2==9) or (b1==5 and b2==12) or (b1==6 and b2==11) or (b1==10 and b2==1) or (b1==7 and b2==2) or (b1==8 and b2==3) or (b1==9 and b2==4) or (b1==12 and b2==5) or (b1==11 and b2==6):
         if gender1==1:
             score -= p2
-            sal1[1] += p2
+            sal1[2] += p2  # 살 2는 인덱스 2에 저장
         else:
             score -= p21
-            sal1[1] += p21
+            sal1[2] += p21  # 살 2는 인덱스 2에 저장
 
     # 살 3 계산 (간소화)
-    # 살 4 계산
+    # 살 4 계산 (인덱스 4에 저장)
     t = abs(a3-a2)
     if t == 6:
         score -= p41
-        sal0[3] += p41
+        sal0[4] += p41  # 살 4는 인덱스 4에 저장
     t = abs(a3-a1)
     if t == 6:
         score -= p42
-        sal0[3] += p42
+        sal0[4] += p42  # 살 4는 인덱스 4에 저장
     t = abs(a1-a2)
     if t == 6:
         score -= p43
-        sal0[3] += p43
+        sal0[4] += p43  # 살 4는 인덱스 4에 저장
     t = abs(b3-b2)
     if t == 6:
         score -= p41
-        sal1[3] += p41
+        sal1[4] += p41  # 살 4는 인덱스 4에 저장
     t = abs(b3-b1)
     if t == 6:
         score -= p42
-        sal1[3] += p42
+        sal1[4] += p42  # 살 4는 인덱스 4에 저장
     t = abs(b1-b2)
     if t == 6:
         score -= p43
-        sal1[3] += p43
+        sal1[4] += p43  # 살 4는 인덱스 4에 저장
 
     # 나머지 살 계산은 원본 Python 코드의 전체 로직을 포함해야 함
     # 여기서는 간소화된 버전만 포함

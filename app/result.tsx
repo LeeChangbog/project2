@@ -40,7 +40,9 @@ export default function ResultScreen() {
   const { user1, user2, compatibilityResult } = useUserData();
 
   // 실제 계산 결과 사용 또는 기본값
-  const score = compatibilityResult?.score || 0;
+  const rawScore = compatibilityResult?.score || 0;
+  // 소수점 한 자리로 제한
+  const score = typeof rawScore === 'number' ? Number(rawScore.toFixed(1)) : 0;
   const explanation = compatibilityResult?.explanation || '';
   
   /**
@@ -51,35 +53,62 @@ export default function ResultScreen() {
    */
   const salData = React.useMemo(() => {
     if (!compatibilityResult?.salAnalysis || compatibilityResult.salAnalysis.length === 0) {
+      console.log('⚠️ salAnalysis가 없거나 비어있음, 기본값 사용');
       return defaultSalData;
     }
 
-    // 실제 계산된 살 데이터를 기본 구조에 매핑
-    const salMap: { [key: string]: number } = {};
-    compatibilityResult.salAnalysis.forEach((sal) => {
-      // 각 살당 count를 퍼센트로 변환 (최대 100%)
-      salMap[sal.type] = Math.min(sal.count * 10, 100);
-    });
+    // sajuCalculator.ts의 salNames 순서와 매핑
+    // 인덱스 기반으로 매핑 (이름이 다르므로 인덱스로 매칭)
+    const salNames = [
+      '열정 에너지 예술 중독',
+      '예민 직감 영적 불안',
+      '감정기복 갈등 오해 고독',
+      '강함 용감 충동 변화',
+      '책임감 의리 완벽 자존심 인내',
+      '충돌 자유 고집',
+      '카리스마 승부욕 용감 외로움',
+      '의지 솔직 직설 개성 고집 독립심',
+    ];
 
-    // 기본 8개 살 데이터에 실제 계산값 매핑
-    return defaultSalData.map((item) => {
-      // 이름 매칭 (일부는 약간 다를 수 있음)
-      let mappedValue = salMap[item.name] || 0;
-      
-      // 조합된 살의 경우 개별 살의 합으로 계산
-      if (item.name.includes('충') && item.name.includes('형')) {
-        mappedValue = Math.min((salMap['충살'] || 0) + (salMap['형살'] || 0), 100);
-      } else if (item.name.includes('충') && item.name.includes('파')) {
-        mappedValue = Math.min((salMap['충살'] || 0) + (salMap['파살'] || 0), 100);
-      } else if (item.name.includes('형') && item.name.includes('해')) {
-        mappedValue = Math.min((salMap['형살'] || 0) + (salMap['해살'] || 0), 100);
-      } else if (item.name.includes('파') && item.name.includes('해')) {
-        mappedValue = Math.min((salMap['파살'] || 0) + (salMap['해살'] || 0), 100);
+    // 실제 계산된 살 데이터를 인덱스 기반으로 매핑
+    // salAnalysis는 이제 모든 인덱스를 포함하므로 직접 매핑 가능
+    const salValues: number[] = new Array(8).fill(0);
+    
+    // 디버깅: salAnalysis 내용 확인
+    console.log('📊 salAnalysis 데이터:', compatibilityResult.salAnalysis);
+    console.log('📊 salAnalysis 개수:', compatibilityResult.salAnalysis.length);
+    
+    // salAnalysis는 이미 인덱스 순서대로 정렬되어 있음 (sajuCalculator.ts에서 인덱스 0-7 순서로 생성)
+    // 인덱스 기반으로 직접 매핑 (이름 매칭 대신 인덱스 사용)
+    compatibilityResult.salAnalysis.forEach((sal, idx) => {
+      // salAnalysis는 인덱스 0-7 순서로 생성되므로 idx를 직접 사용
+      const index = idx;
+      if (index >= 0 && index < 8) {
+        // count는 감점 점수 (백엔드에서 오는 실제 값)
+        // Python 코드에서 p1=8, p11=9.5, p2=7, p21=8.2, p41=10, p42=8, p43=6 등
+        // 살 값은 보통 0-20 정도의 범위
+        // 그래프 표시를 위해 0-100 범위로 스케일링
+        // 최대값을 20으로 가정 (실제 최대값에 따라 조정 가능)
+        const rawValue = sal.count || 0;
+        // 20을 100%로 스케일링 (값이 20이면 100%로 표시)
+        salValues[index] = Math.min((rawValue / 20) * 100, 100);
+        
+        // 디버깅: 모든 값 로그 (0이어도)
+        console.log(`살 ${index} (${sal.type}): rawValue=${rawValue}, scaledValue=${salValues[index]}`);
+      } else {
+        console.warn(`⚠️ 인덱스 범위 초과: ${index} (살 이름: ${sal.type})`);
       }
-      
+    });
+    
+    console.log('📊 최종 salValues:', salValues);
+    console.log('📊 salValues 합계:', salValues.reduce((a, b) => a + b, 0));
+
+    // 기본 8개 살 데이터에 실제 계산값 매핑 (인덱스 기반)
+    // 항상 8개의 살 데이터를 반환 (값이 0이어도 포함)
+    return defaultSalData.map((item, index) => {
       return {
         ...item,
-        value: mappedValue,
+        value: salValues[index] || 0,
       };
     });
   }, [compatibilityResult]);

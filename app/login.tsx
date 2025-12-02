@@ -11,7 +11,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
+import { Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
+import { showAlert } from '@/utils/alert';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -26,20 +27,20 @@ export default function LoginScreen() {
   const handleLogin = async () => {
     // 입력값 검증
     if (!email || !password) {
-      Alert.alert('입력 오류', '이메일과 비밀번호를 모두 입력해주세요.');
+      showAlert('입력 오류', '이메일과 비밀번호를 모두 입력해주세요.');
       return;
     }
 
     // 이메일 형식 검증
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      Alert.alert('입력 오류', '올바른 이메일 형식을 입력해주세요.');
+      showAlert('입력 오류', '올바른 이메일 형식을 입력해주세요.');
       return;
     }
 
     // 비밀번호 길이 검증
     if (password.length < 6) {
-      Alert.alert('입력 오류', '비밀번호는 최소 6자 이상이어야 합니다.');
+      showAlert('입력 오류', '비밀번호는 최소 6자 이상이어야 합니다.');
       return;
     }
 
@@ -47,21 +48,21 @@ export default function LoginScreen() {
       setLoading(true);
       
       // 로그인 API 호출
-      const success = await login(email, password);
+      const result = await login(email, password);
       
-      if (success) {
-        Alert.alert('로그인 성공', '로그인되었습니다.', [
-          {
-            text: '확인',
-            onPress: () => router.replace('/(tabs)'),
-          },
-        ]);
+      if (result.success) {
+        showAlert('로그인 성공', '로그인되었습니다.');
+        // 팝업 표시 후 홈 화면으로 자동 이동
+        setTimeout(() => {
+          router.replace('/(tabs)');
+        }, 500);
       } else {
-        Alert.alert('로그인 실패', '이메일 또는 비밀번호가 올바르지 않습니다.');
+        // 백엔드에서 반환한 구체적인 에러 메시지 표시
+        showAlert('로그인 실패', result.message || '이메일 또는 비밀번호가 올바르지 않습니다.');
       }
     } catch (error) {
       console.error('로그인 오류:', error);
-      Alert.alert('오류', '로그인 중 오류가 발생했습니다.');
+      showAlert('오류', '로그인 중 오류가 발생했습니다.');
     } finally {
       setLoading(false);
     }

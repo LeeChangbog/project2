@@ -66,9 +66,9 @@ export async function apiRequest<T>(
 ): Promise<T> {
   const token = await getAuthToken();
   
-  const headers: HeadersInit = {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...options.headers,
+    ...(options.headers as Record<string, string> || {}),
   };
 
   if (token) {
@@ -78,22 +78,29 @@ export async function apiRequest<T>(
   const url = `${API_BASE_URL}${endpoint}`;
   
   try {
+    console.log(`🌐 API 요청: ${url}`, { method: options.method || 'GET' });
     const response = await fetch(url, {
       ...options,
       headers,
     });
 
+    console.log(`📡 API 응답 상태: ${response.status} ${response.statusText}`);
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(
+      console.error(`❌ API 오류 응답:`, errorData);
+      const error = new Error(
         errorData.message || `API 오류: ${response.status} ${response.statusText}`
-      );
+      ) as Error & { response?: any };
+      error.response = errorData;
+      throw error;
     }
 
     const data = await response.json();
+    console.log(`✅ API 성공 응답:`, data);
     return data;
   } catch (error) {
-    console.error(`API 요청 실패 (${endpoint}):`, error);
+    console.error(`❌ API 요청 실패 (${endpoint}):`, error);
     throw error;
   }
 }
@@ -106,36 +113,65 @@ export const authAPI = {
    * 로그인
    */
   async login(email: string, password: string) {
-    const response = await apiRequest<{
-      success: boolean;
-      token?: string;
-      user?: any;
-      message?: string;
-    }>('/api/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ email, password }),
-    });
+    try {
+      const response = await apiRequest<{
+        success: boolean;
+        token?: string;
+        user?: any;
+        message?: string;
+      }>('/api/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, password }),
+      });
 
-    if (response.success && response.token) {
-      await setAuthToken(response.token);
+      if (response.success && response.token) {
+        await setAuthToken(response.token);
+      }
+
+      return response;
+    } catch (error: any) {
+      // API 요청 실패 시 에러 메시지 포함하여 반환
+      return {
+        success: false,
+        message: error?.message || '로그인 중 오류가 발생했습니다.',
+      };
     }
-
-    return response;
   },
 
   /**
    * 회원가입
    */
   async signup(email: string, password: string, name?: string) {
-    return apiRequest<{
-      success: boolean;
-      token?: string;
-      user?: any;
-      message?: string;
-    }>('/api/auth/signup', {
-      method: 'POST',
-      body: JSON.stringify({ email, password, name }),
-    });
+    try {
+      console.log('📤 signup API 호출:', { email, name });
+      const url = `${API_BASE_URL}/api/auth/signup`;
+      console.log('🌐 요청 URL:', url);
+      
+      const response = await apiRequest<{
+        success: boolean;
+        token?: string;
+        user?: any;
+        message?: string;
+      }>('/api/auth/signup', {
+        method: 'POST',
+        body: JSON.stringify({ email, password, name }),
+      });
+
+      console.log('📥 signup API 응답:', response);
+
+      if (response.success && response.token) {
+        await setAuthToken(response.token);
+      }
+
+      return response;
+    } catch (error: any) {
+      console.error('❌ signup API 오류:', error);
+      // API 요청 실패 시 에러 메시지 포함하여 반환
+      return {
+        success: false,
+        message: error?.message || '회원가입 중 오류가 발생했습니다.',
+      };
+    }
   },
 
   /**

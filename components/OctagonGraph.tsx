@@ -217,7 +217,7 @@ export function OctagonGraph({ salData }: OctagonGraphProps) {
                 <View style={styles.barBackground}>
                   <View style={[styles.barFill, { width: `${Math.min(item.value, 100)}%` }]} />
                 </View>
-                <ThemedText style={styles.barValue}>{item.value}%</ThemedText>
+                <ThemedText style={styles.barValue}>{Math.round(item.value)}%</ThemedText>
               </View>
             </View>
           ))}
@@ -332,7 +332,7 @@ export function OctagonGraph({ salData }: OctagonGraphProps) {
               <View style={styles.barBackground}>
                 <View style={[styles.barFill, { width: `${Math.min(item.value, 100)}%` }]} />
               </View>
-              <ThemedText style={styles.barValue}>{item.value}%</ThemedText>
+              <ThemedText style={styles.barValue}>{Math.round(item.value)}%</ThemedText>
             </View>
           </View>
         ))}

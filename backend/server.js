@@ -255,7 +255,7 @@ app.post('/api/auth/login', async (req, res) => {
     if (!user) {
       return res.status(401).json({
         success: false,
-        message: '이메일 또는 비밀번호가 올바르지 않습니다.',
+        message: '등록되지 않은 이메일입니다.',
       });
     }
 
@@ -263,7 +263,7 @@ app.post('/api/auth/login', async (req, res) => {
     if (user.password !== password) {
       return res.status(401).json({
         success: false,
-        message: '이메일 또는 비밀번호가 올바르지 않습니다.',
+        message: '비밀번호가 올바르지 않습니다.',
       });
     }
 

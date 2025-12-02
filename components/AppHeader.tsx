@@ -10,6 +10,7 @@
 import { Colors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { showAlert } from '@/utils/alert';
 import { usePathname, useRouter } from 'expo-router';
 import { Platform, StyleSheet, TouchableOpacity } from 'react-native';
 import { ThemedText } from './themed-text';
@@ -33,9 +34,43 @@ export function AppHeader({ title, showHomeButton = true, showAuthButtons = fals
   const isHome = pathname === '/(tabs)' || pathname === '/';
 
   // 로그아웃 처리
-  const handleLogout = () => {
-    logout();
-    router.replace('/(tabs)');
+  const handleLogout = async () => {
+    // 로그아웃 확인 팝업 (웹에서는 window.confirm 사용)
+    let shouldLogout = false;
+    
+    if (Platform.OS === 'web') {
+      shouldLogout = window.confirm('로그아웃 하시겠습니까?');
+    } else {
+      // 모바일에서는 Alert.alert 사용
+      const { Alert } = require('react-native');
+      await new Promise<void>((resolve) => {
+        Alert.alert(
+          '로그아웃',
+          '로그아웃 하시겠습니까?',
+          [
+            {
+              text: '취소',
+              style: 'cancel',
+              onPress: () => resolve(),
+            },
+            {
+              text: '로그아웃',
+              style: 'destructive',
+              onPress: () => {
+                shouldLogout = true;
+                resolve();
+              },
+            },
+          ]
+        );
+      });
+    }
+    
+    if (shouldLogout) {
+      await logout();
+      showAlert('로그아웃 완료', '로그아웃되었습니다.');
+      router.replace('/(tabs)');
+    }
   };
 
   return (
