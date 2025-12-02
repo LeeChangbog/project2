@@ -5,7 +5,19 @@
  * - 에러 처리
  */
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://localhost:3000';
+// 배포 환경에서는 실제 서버 URL 사용, 로컬에서는 환경 변수 또는 localhost
+const getApiBaseUrl = () => {
+  if (process.env.EXPO_PUBLIC_API_BASE_URL) {
+    return process.env.EXPO_PUBLIC_API_BASE_URL;
+  }
+  // 웹 환경에서 localhost가 아니면 현재 도메인 사용
+  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    return window.location.origin;
+  }
+  return 'http://localhost:3000';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 /**
  * 인증 토큰 가져오기 (로컬 스토리지 또는 AsyncStorage)
@@ -130,10 +142,13 @@ export const authAPI = {
 
       return response;
     } catch (error: any) {
-      // API 요청 실패 시 에러 메시지 포함하여 반환
+      console.error('❌ login API 오류:', error);
+      // API 요청 실패 시 (네트워크 오류, 서버 오류 등)
+      // 에러 메시지에서 실제 백엔드 응답 메시지 추출 시도
+      const errorMessage = error?.response?.message || error?.message || '로그인 중 오류가 발생했습니다.';
       return {
         success: false,
-        message: error?.message || '로그인 중 오류가 발생했습니다.',
+        message: errorMessage,
       };
     }
   },

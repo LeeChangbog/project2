@@ -3,6 +3,10 @@
  */
 const mongoose = require('mongoose');
 
+// MongoDB 연결 문자열
+// 데이터베이스 이름을 포함해야 합니다 (예: /sajumonoo)
+// 사용자가 제공한 URL: mongodb+srv://leechangbok:15798042@cluster0.k5wiwco.mongodb.net/?appName=Cluster0
+// 데이터베이스 이름 추가 필요: /sajumonoo (또는 원하는 데이터베이스 이름)
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://leechangbok:15798042@cluster0.k5wiwco.mongodb.net/sajumonoo?retryWrites=true&w=majority&appName=Cluster0';
 
 /**

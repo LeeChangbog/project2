@@ -9,11 +9,11 @@ import { ThemedView } from '@/components/themed-view';
 import { Colors } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { showAlert } from '@/utils/alert';
 import { authAPI } from '@/utils/apiClient';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Platform, ScrollView, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
-import { showAlert } from '@/utils/alert';
 
 export default function SignupScreen() {
   const router = useRouter();
@@ -56,8 +56,15 @@ export default function SignupScreen() {
       setLoading(true);
       
       // 회원가입 API 호출
-      const USE_BACKEND_API = process.env.EXPO_PUBLIC_USE_BACKEND_API === 'true';
-      console.log('🔍 회원가입 시작:', { email, USE_BACKEND_API });
+      // 배포 환경에서는 항상 백엔드 API 사용
+      const isProduction = typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+      const USE_BACKEND_API = isProduction || process.env.EXPO_PUBLIC_USE_BACKEND_API === 'true';
+      console.log('🔍 회원가입 시작:', { email, USE_BACKEND_API, isProduction, API_URL: process.env.EXPO_PUBLIC_API_BASE_URL });
+      
+      if (!USE_BACKEND_API) {
+        showAlert('오류', '백엔드 API가 설정되지 않았습니다. 환경 변수를 확인해주세요.');
+        return;
+      }
       
       if (USE_BACKEND_API) {
         console.log('📤 회원가입 API 호출 중...');

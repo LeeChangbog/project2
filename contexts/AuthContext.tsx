@@ -8,7 +8,9 @@ import { authAPI } from '@/utils/apiClient';
 import React, { createContext, ReactNode, useContext, useState } from 'react';
 
 // 백엔드 API 사용 여부 확인
-const USE_BACKEND_API = process.env.EXPO_PUBLIC_USE_BACKEND_API === 'true';
+// 배포 환경(웹)에서는 항상 백엔드 API 사용, 로컬 개발 환경에서는 환경 변수 확인
+const isProduction = typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+const USE_BACKEND_API = isProduction || process.env.EXPO_PUBLIC_USE_BACKEND_API === 'true';
 
 /**
  * 사용자 정보 타입
@@ -71,26 +73,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return { success: false, message: response.message || '로그인에 실패했습니다.' };
         }
       } else {
-        // 임시: 로컬 로그인 (백엔드 미사용 시)
-        // 로컬 스토리지에서 프로필 정보 확인
-        let profile = null;
-        try {
-          if (typeof window !== 'undefined' && window.localStorage) {
-            const savedProfile = window.localStorage.getItem('userProfile');
-            profile = savedProfile ? JSON.parse(savedProfile) : null;
-          }
-        } catch (e) {
-          console.log('localStorage not available');
-        }
-
-        setUser({
-          id: email,
-          email,
-          name: profile?.name || email.split('@')[0],
-          profile: profile || undefined,
-        });
-
-        return { success: true };
+        // 백엔드 API가 비활성화된 경우 - 프로덕션에서는 허용하지 않음
+        console.error('⚠️ 백엔드 API가 비활성화되어 있습니다. 프로덕션 환경에서는 백엔드 API를 사용해야 합니다.');
+        return { 
+          success: false, 
+          message: '서버 연결 오류가 발생했습니다. 관리자에게 문의하세요.' 
+        };
       }
     } catch (error: any) {
       console.error('로그인 실패:', error);

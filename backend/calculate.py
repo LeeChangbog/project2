@@ -98,8 +98,13 @@ def calculate_earth(i, j):
     return pred
 
 def calculate(token0, token1, gender0, gender1, score):
-    """살 계산 및 감점"""
-    score = float(score)
+    """살 계산 및 감점 (hd5.py의 완전한 로직 사용)"""
+    # score가 numpy array인 경우 item()으로 변환, 아니면 float로 변환
+    if hasattr(score, 'item'):
+        score = score.item()
+    else:
+        score = float(score)
+    
     a1 = token0[1]  # person0 년지
     a2 = token0[3]  # person0 월지
     a3 = token0[5]  # person0 일지
@@ -107,10 +112,17 @@ def calculate(token0, token1, gender0, gender1, score):
     b2 = token1[3]  # person1 월지
     b3 = token1[5]  # person1 일지
     
+    # 디버깅: 입력값 확인
+    print(f"DEBUG calculate: token0={token0}, token1={token1}, gender0={gender0}, gender1={gender1}, score={score}", file=sys.stderr)
+    print(f"DEBUG calculate: a1={a1}, a2={a2}, a3={a3}, b1={b1}, b2={b2}, b3={b3}", file=sys.stderr)
+    
     sal0 = [0,0,0,0,0,0,0,0]
     sal1 = [0,0,0,0,0,0,0,0]
+    
+    # 살 계산 전 카운터
+    sal_count_before = sum(sal0) + sum(sal1)
 
-    # 살 0 계산
+    # 살 0 계산 (hd5.py의 완전한 로직)
     if a3==3:
         if a1==6 or a1==9:
             if gender0==1:
@@ -202,54 +214,912 @@ def calculate(token0, token1, gender0, gender1, score):
                 score -= p11
                 sal1[0] += p11
 
-    # 살 1 계산 (간소화 - 전체 로직은 원본 Python 코드 참조)
-    # 여기서는 주요 로직만 포함
-    
-    # 살 2 계산 (인덱스 2에 저장)
+    # 살 1 계산 (hd5.py의 완전한 로직)
+    if a3==1:
+        if a1==10 or a2==10:
+            if gender0==1:
+                score -= p2
+                sal0[1] += p2
+            else:
+                score -= p21
+                sal0[1] += p21
+    if a3==2:
+        if a1==7 or a2==7:
+            if gender0==1:
+                score -= p2
+                sal0[1] += p2
+            else:
+                score -= p21
+                sal0[1] += p21
+    if a3==3:
+        if a1==8 or a2==8:
+            if gender0==1:
+                score -= p2
+                sal0[1] += p2
+            else:
+                score -= p21
+                sal0[1] += p21
+    if a3==4:
+        if a1==9 or a2==9:
+            if gender0==1:
+                score -= p2
+                sal0[1] += p2
+            else:
+                score -= p21
+                sal0[1] += p21
+    if a3==5:
+        if a1==12 or a2==12:
+            if gender0==1:
+                score -= p2
+                sal0[1] += p2
+            else:
+                score -= p21
+                sal0[1] += p21
+    if a3==6:
+        if a1==11 or a2==11:
+            if gender0==1:
+                score -= p2
+                sal0[1] += p2
+            else:
+                score -= p21
+                sal0[1] += p21
+    if a3==7:
+        if a1==2 or a2==2:
+            if gender0==1:
+                score -= p2
+                sal0[1] += p2
+            else:
+                score -= p21
+                sal0[1] += p21
+    if a3==8:
+        if a1==3 or a2==3:
+            if gender0==1:
+                score -= p2
+                sal0[1] += p2
+            else:
+                score -= p21
+                sal0[1] += p21
+    if a3==9:
+        if a1==4 or a2==4:
+            if gender0==1:
+                score -= p2
+                sal0[1] += p2
+            else:
+                score -= p21
+                sal0[1] += p21
+    if a3==10:
+        if a1==1 or a2==1:
+            if gender0==1:
+                score -= p2
+                sal0[1] += p2
+            else:
+                score -= p21
+                sal0[1] += p21
+    if a3==11:
+        if a1==6 or a2==6:
+            if gender0==1:
+                score -= p2
+                sal0[1] += p2
+            else:
+                score -= p21
+                sal0[1] += p21
+    if a3==12:
+        if a1==5 or a2==5:
+            if gender0==1:
+                score -= p2
+                sal0[1] += p2
+            else:
+                score -= p21
+                sal0[1] += p21
+    if b3==1:
+        if b1==10 or b2==10:
+            if gender1==1:
+                score -= p2
+                sal1[1] += p2
+            else:
+                score -= p21
+                sal1[1] += p21
+    if b3==2:
+        if b1==7 or b2==7:
+            if gender1==1:
+                score -= p2
+                sal1[1] += p2
+            else:
+                score -= p21
+                sal1[1] += p21
+    if b3==3:
+        if b1==8 or b2==8:
+            if gender1==1:
+                score -= p2
+                sal1[1] += p2
+            else:
+                score -= p21
+                sal1[1] += p21
+    if b3==4:
+        if b1==9 or b2==9:
+            if gender1==1:
+                score -= p2
+                sal1[1] += p2
+            else:
+                score -= p21
+                sal1[1] += p21
+    if b3==5:
+        if b1==12 or b2==12:
+            score -= p2
+            sal1[1] += p2
+    if b3==6:
+        if b1==11 or b2==11:
+            if gender1==1:
+                score -= p2
+                sal1[1] += p2
+            else:
+                score -= p21
+                sal1[1] += p21
+    if b3==7:
+        if b1==2 or b2==2:
+            if gender1==1:
+                score -= p2
+                sal1[1] += p2
+            else:
+                score -= p21
+                sal1[1] += p21
+    if b3==8:
+        if b1==3 or b2==3:
+            if gender1==1:
+                score -= p2
+                sal1[1] += p2
+            else:
+                score -= p21
+                sal1[1] += p21
+    if b3==9:
+        if b1==4 or b2==4:
+            if gender1==1:
+                score -= p2
+                sal1[1] += p2
+            else:
+                score -= p21
+                sal1[1] += p21
+    if b3==10:
+        if b1==1 or b2==1:
+            if gender1==1:
+                score -= p2
+                sal1[1] += p2
+            else:
+                score -= p21
+                sal1[1] += p21
+    if b3==11:
+        if b1==6 or b2==6:
+            if gender1==1:
+                score -= p2
+                sal1[1] += p2
+            else:
+                score -= p21
+                sal1[1] += p21
+    if b3==12:
+        if b1==5 or b2==5:
+            if gender1==1:
+                score -= p2
+                sal1[1] += p2
+            else:
+                score -= p21
+                sal1[1] += p21
+
     if (a1==1 and a2==10) or (a1==2 and a2==7) or (a1==3 and a2==8) or (a1==4 and a2==9) or (a1==5 and a2==12) or (a1==6 and a2==11) or (a1==10 and a2==1) or (a1==7 and a2==2) or (a1==8 and a2==3) or (a1==9 and a2==4) or (a1==12 and a2==5) or (a1==11 and a2==6):
         if gender0==1:
             score -= p2
-            sal0[2] += p2  # 살 2는 인덱스 2에 저장
+            sal0[1] += p2
         else:
             score -= p21
-            sal0[2] += p21  # 살 2는 인덱스 2에 저장
+            sal0[1] += p21
     if (b1==1 and b2==10) or (b1==2 and b2==7) or (b1==3 and b2==8) or (b1==4 and b2==9) or (b1==5 and b2==12) or (b1==6 and b2==11) or (b1==10 and b2==1) or (b1==7 and b2==2) or (b1==8 and b2==3) or (b1==9 and b2==4) or (b1==12 and b2==5) or (b1==11 and b2==6):
         if gender1==1:
             score -= p2
-            sal1[2] += p2  # 살 2는 인덱스 2에 저장
+            sal1[1] += p2
         else:
             score -= p21
-            sal1[2] += p21  # 살 2는 인덱스 2에 저장
+            sal1[1] += p21
 
-    # 살 3 계산 (간소화)
-    # 살 4 계산 (인덱스 4에 저장)
+    # 살 2 계산 (hd5.py의 완전한 로직) - 인덱스 2에 저장
+    if a1==1:
+        if a2==8:
+            score -= p3
+            sal0[2] += p3
+        if a3==8:
+            score -= p3
+            sal0[2] += p3
+    if a1==2:
+        if a2==7:
+            score -= p3
+            sal0[2] += p3
+        if a3==7:
+            score -= p3
+            sal0[2] += p3
+    if a1==3:
+        if a2==10:
+            score -= p3
+            sal0[2] += p3
+        if a3==10:
+            score -= p3
+            sal0[2] += p3
+    if a1==4:
+        if a2==9:
+            score -= p3
+            sal0[2] += p3
+        if a3==9:
+            score -= p3
+            sal0[2] += p3
+    if a1==5:
+        if a2==12:
+            score -= p3
+            sal0[2] += p3
+        if a3==12:
+            score -= p3
+            sal0[2] += p3
+    if a1==6:
+        if a2==11:
+            score -= p3
+            sal0[2] += p3
+        if a3==11:
+            score -= p3
+            sal0[2] += p3
+    if a1==7:
+        if a2==2:
+            score -= p3
+            sal0[2] += p3
+        if a3==2:
+            score -= p3
+            sal0[2] += p3
+    if a1==8:
+        if a2==1:
+            score -= p3
+            sal0[2] += p3
+        if a3==1:
+            score -= p3
+            sal0[2] += p3
+    if a1==9:
+        if a2==4:
+            score -= p3
+            sal0[2] += p3
+        if a3==4:
+            score -= p3
+            sal0[2] += p3
+    if a1==10:
+        if a2==3:
+            score -= p3
+            sal0[2] += p3
+        if a3==3:
+            score -= p3
+            sal0[2] += p3
+    if a1==11:
+        if a2==6:
+            score -= p3
+            sal0[2] += p3
+        if a3==6:
+            score -= p3
+            sal0[2] += p3
+    if a1==12:
+        if a2==5:
+            score -= p3
+            sal0[2] += p3
+        if a3==5:
+            score -= p3
+            sal0[2] += p3
+    if a2==1:
+        if a1==8:
+            score -= p3
+            sal0[2] += p3
+        if a3==8:
+            score -= p3
+            sal0[2] += p3
+    if a2==2:
+        if a1==7:
+            score -= p3
+            sal0[2] += p3
+        if a3==7:
+            score -= p3
+            sal0[2] += p3
+    if a2==3:
+        if a1==10:
+            score -= p3
+            sal0[2] += p3
+        if a3==10:
+            score -= p3
+            sal0[2] += p3
+    if a2==4:
+        if a1==9:
+            score -= p3
+            sal0[2] += p3
+        if a3==9:
+            score -= p3
+            sal0[2] += p3
+    if a2==5:
+        if a1==12:
+            score -= p3
+            sal0[2] += p3
+        if a3==12:
+            score -= p3
+            sal0[2] += p3
+    if a2==6:
+        if a1==11:
+            score -= p3
+            sal0[2] += p3
+        if a3==11:
+            score -= p3
+            sal0[2] += p3
+    if a2==7:
+        if a1==2:
+            score -= p3
+            sal0[2] += p3
+        if a3==2:
+            score -= p3
+            sal0[2] += p3
+    if a2==8:
+        if a1==1:
+            score -= p3
+            sal0[2] += p3
+        if a3==1:
+            score -= p3
+            sal0[2] += p3
+    if a2==9:
+        if a1==4:
+            score -= p3
+            sal0[2] += p3
+        if a3==4:
+            score -= p3
+            sal0[2] += p3
+    if a2==10:
+        if a1==3:
+            score -= p3
+            sal0[2] += p3
+        if a3==3:
+            score -= p3
+            sal0[2] += p3
+    if a2==11:
+        if a1==6:
+            score -= p3
+            sal0[2] += p3
+        if a3==6:
+            score -= p3
+            sal0[2] += p3
+    if a2==12:
+        if a1==5:
+            score -= p3
+            sal0[2] += p3
+        if a3==5:
+            score -= p3
+            sal0[2] += p3
+    if a3==1:
+        if a1==8:
+            score -= p3
+            sal0[2] += p3
+        if a2==8:
+            score -= p3
+            sal0[2] += p3
+    if a3==2:
+        if a1==7:
+            score -= p3
+            sal0[2] += p3
+        if a2==7:
+            score -= p3
+            sal0[2] += p3
+    if a3==3:
+        if a1==10:
+            score -= p3
+            sal0[2] += p3
+        if a2==10:
+            score -= p3
+            sal0[2] += p3
+    if a3==4:
+        if a1==9:
+            score -= p3
+            sal0[2] += p3
+        if a2==9:
+            score -= p3
+            sal0[2] += p3
+    if a3==5:
+        if a1==12:
+            score -= p3
+            sal0[2] += p3
+        if a2==12:
+            score -= p3
+            sal0[2] += p3
+    if a3==6:
+        if a1==11:
+            score -= p3
+            sal0[2] += p3
+        if a2==11:
+            score -= p3
+            sal0[2] += p3
+    if a3==7:
+        if a1==2:
+            score -= p3
+            sal0[2] += p3
+        if a2==2:
+            score -= p3
+            sal0[2] += p3
+    if a3==8:
+        if a1==1:
+            score -= p3
+            sal0[2] += p3
+        if a2==1:
+            score -= p3
+            sal0[2] += p3
+    if a3==9:
+        if a1==4:
+            score -= p3
+            sal0[2] += p3
+        if a2==4:
+            score -= p3
+            sal0[2] += p3
+    if a3==10:
+        if a1==3:
+            score -= p3
+            sal0[2] += p3
+        if a2==3:
+            score -= p3
+            sal0[2] += p3
+    if a3==11:
+        if a1==6:
+            score -= p3
+            sal0[2] += p3
+        if a2==6:
+            score -= p3
+            sal0[2] += p3
+    if a3==12:
+        if a1==5:
+            score -= p3
+            sal0[2] += p3
+        if a2==5:
+            score -= p3
+            sal0[2] += p3
+    if b1==1:
+        if b2==8:
+            score -= p3
+            sal1[2] += p3
+        if b3==8:
+            score -= p3
+            sal1[2] += p3
+    if b1==2:
+        if b2==7:
+            score -= p3
+            sal1[2] += p3
+        if b3==7:
+            score -= p3
+            sal1[2] += p3
+    if b1==3:
+        if b2==10:
+            score -= p3
+            sal1[2] += p3
+        if b3==10:
+            score -= p3
+            sal1[2] += p3
+    if b1==4:
+        if b2==9:
+            score -= p3
+            sal1[2] += p3
+        if b3==9:
+            score -= p3
+            sal1[2] += p3
+    if b1==5:
+        if b2==12:
+            score -= p3
+            sal1[2] += p3
+        if b3==12:
+            score -= p3
+            sal1[2] += p3
+    if b1==6:
+        if b2==11:
+            score -= p3
+            sal1[2] += p3
+        if b3==11:
+            score -= p3
+            sal1[2] += p3
+    if b1==7:
+        if b2==2:
+            score -= p3
+            sal1[2] += p3
+        if b3==2:
+            score -= p3
+            sal1[2] += p3
+    if b1==8:
+        if b2==1:
+            score -= p3
+            sal1[2] += p3
+        if b3==1:
+            score -= p3
+            sal1[2] += p3
+    if b1==9:
+        if b2==4:
+            score -= p3
+            sal1[2] += p3
+        if b3==4:
+            score -= p3
+            sal1[2] += p3
+    if b1==10:
+        if b2==3:
+            score -= p3
+            sal1[2] += p3
+        if b3==3:
+            score -= p3
+            sal1[2] += p3
+    if b1==11:
+        if b2==6:
+            score -= p3
+            sal1[2] += p3
+        if b3==6:
+            score -= p3
+            sal1[2] += p3
+    if b1==12:
+        if b2==5:
+            score -= p3
+            sal1[2] += p3
+        if b3==5:
+            score -= p3
+            sal1[2] += p3
+    if b2==1:
+        if b1==8:
+            score -= p3
+            sal1[2] += p3
+        if b3==8:
+            score -= p3
+            sal1[2] += p3
+    if b2==2:
+        if b1==7:
+            score -= p3
+            sal1[2] += p3
+        if b3==7:
+            score -= p3
+            sal1[2] += p3
+    if b2==3:
+        if b1==10:
+            score -= p3
+            sal1[2] += p3
+        if b3==10:
+            score -= p3
+            sal1[2] += p3
+    if b2==4:
+        if b1==9:
+            score -= p3
+            sal1[2] += p3
+        if b3==9:
+            score -= p3
+            sal1[2] += p3
+    if b2==5:
+        if b1==12:
+            score -= p3
+            sal1[2] += p3
+        if b3==12:
+            score -= p3
+            sal1[2] += p3
+    if b2==6:
+        if b1==11:
+            score -= p3
+            sal1[2] += p3
+        if b3==11:
+            score -= p3
+            sal1[2] += p3
+    if b2==7:
+        if b1==2:
+            score -= p3
+            sal1[2] += p3
+        if b3==2:
+            score -= p3
+            sal1[2] += p3
+    if b2==8:
+        if b1==1:
+            score -= p3
+            sal1[2] += p3
+        if b3==1:
+            score -= p3
+            sal1[2] += p3
+    if b2==9:
+        if b1==4:
+            score -= p3
+            sal1[2] += p3
+        if b3==4:
+            score -= p3
+            sal1[2] += p3
+    if b2==10:
+        if b1==3:
+            score -= p3
+            sal1[2] += p3
+        if b3==3:
+            score -= p3
+            sal1[2] += p3
+    if b2==11:
+        if b1==6:
+            score -= p3
+            sal1[2] += p3
+        if b3==6:
+            score -= p3
+            sal1[2] += p3
+    if b2==12:
+        if b1==5:
+            score -= p3
+            sal1[2] += p3
+        if b3==5:
+            score -= p3
+            sal1[2] += p3
+    if b3==1:
+        if b1==8:
+            score -= p3
+            sal1[2] += p3
+        if b2==8:
+            score -= p3
+            sal1[2] += p3
+    if b3==2:
+        if b1==7:
+            score -= p3
+            sal1[2] += p3
+        if b2==7:
+            score -= p3
+            sal1[2] += p3
+    if b3==3:
+        if b1==10:
+            score -= p3
+            sal1[2] += p3
+        if b2==10:
+            score -= p3
+            sal1[2] += p3
+    if b3==4:
+        if b1==9:
+            score -= p3
+            sal1[2] += p3
+        if b2==9:
+            score -= p3
+            sal1[2] += p3
+    if b3==5:
+        if b1==12:
+            score -= p3
+            sal1[2] += p3
+        if b2==12:
+            score -= p3
+            sal1[2] += p3
+    if b3==6:
+        if b1==11:
+            score -= p3
+            sal1[2] += p3
+        if b2==11:
+            score -= p3
+            sal1[2] += p3
+    if b3==7:
+        if b1==2:
+            score -= p3
+            sal1[2] += p3
+        if b2==2:
+            score -= p3
+            sal1[2] += p3
+    if b3==8:
+        if b1==1:
+            score -= p3
+            sal1[2] += p3
+        if b2==1:
+            score -= p3
+            sal1[2] += p3
+    if b3==9:
+        if b1==4:
+            score -= p3
+            sal1[2] += p3
+        if b2==4:
+            score -= p3
+            sal1[2] += p3
+    if b3==10:
+        if b1==3:
+            score -= p3
+            sal1[2] += p3
+        if b2==3:
+            score -= p3
+            sal1[2] += p3
+    if b3==11:
+        if b1==6:
+            score -= p3
+            sal1[2] += p3
+        if b2==6:
+            score -= p3
+            sal1[2] += p3
+    if b3==12:
+        if b1==5:
+            score -= p3
+            sal1[2] += p3
+        if b2==5:
+            score -= p3
+            sal1[2] += p3
+    
+    # 살 3 계산 (인덱스 3에 저장) - hd5.py의 852-875 라인
     t = abs(a3-a2)
     if t == 6:
         score -= p41
-        sal0[4] += p41  # 살 4는 인덱스 4에 저장
+        sal0[3] += p41
     t = abs(a3-a1)
     if t == 6:
         score -= p42
-        sal0[4] += p42  # 살 4는 인덱스 4에 저장
+        sal0[3] += p42
     t = abs(a1-a2)
     if t == 6:
         score -= p43
-        sal0[4] += p43  # 살 4는 인덱스 4에 저장
+        sal0[3] += p43
     t = abs(b3-b2)
     if t == 6:
         score -= p41
-        sal1[4] += p41  # 살 4는 인덱스 4에 저장
+        sal1[3] += p41
     t = abs(b3-b1)
     if t == 6:
         score -= p42
-        sal1[4] += p42  # 살 4는 인덱스 4에 저장
+        sal1[3] += p42
     t = abs(b1-b2)
     if t == 6:
         score -= p43
-        sal1[4] += p43  # 살 4는 인덱스 4에 저장
+        sal1[3] += p43
 
-    # 나머지 살 계산은 원본 Python 코드의 전체 로직을 포함해야 함
-    # 여기서는 간소화된 버전만 포함
+    # 살 4 계산 (인덱스 4에 저장) - hd5.py의 878-954 라인
+    if a3==1:
+        if a1==4 or a2==4:
+            score -= p5
+            sal0[4] += p5
+    if a3==2:
+        if a1==11 or a2==11:
+            score -= p5
+            sal0[4] += p5
+    if a3==3:
+        if a1==6 or a2==6:
+            score -= p5
+            sal0[4] += p5
+    if a3==4:
+        if a1==1 or a2==1:
+            score -= p5
+            sal0[4] += p5
+    if a3==6:
+        if a1==9 or a2==9:
+            score -= p5
+            sal0[4] += p5
+    if a3==8:
+        if a1==11 or a2==11:
+            score -= p5
+            sal0[4] += p5
+    if a3==9:
+        if a1==6 or a2==6:
+            score -= p5
+            sal0[4] += p5
+    if a3==11:
+        if a1==8 or a2==8:
+            score -= p5
+            sal0[4] += p5
+    if b3==1:
+        if b1==4 or b2==4:
+            score -= p5
+            sal1[4] += p5
+    if b3==2:
+        if b1==11 or b2==11:
+            score -= p5
+            sal1[4] += p5
+    if b3==3:
+        if b1==6 or b2==6:
+            score -= p5
+            sal1[4] += p5
+    if b3==4:
+        if b1==1 or b2==1:
+            score -= p5
+            sal1[4] += p5
+    if b3==6:
+        if b1==9 or b2==9:
+            score -= p5
+            sal1[4] += p5
+    if b3==8:
+        if b1==11 or b2==11:
+            score -= p5
+            sal1[4] += p5
+    if b3==9:
+        if b1==6 or b2==6:
+            score -= p5
+            sal1[4] += p5
+    if b3==11:
+        if b1==8 or b2==8:
+            score -= p5
+            sal1[4] += p5
+
+    if (a1==1 and a2==4) or (a1==2 and a2==11) or (a1==3 and a2==6) or (a1==6 and a2==9) or (a1==8 and a2==11):
+        score -= p5
+        sal0[4] += p5
+    if (a1==4 and a2==1) or (a1==11 and a2==2) or (a1==6 and a2==3) or (a1==9 and a2==6) or (a1==11 and a2==8):
+        score -= p5
+        sal0[4] += p5
+    if (b1==1 and b2==4) or (b1==2 and b2==11) or (b1==3 and b2==6) or (b1==6 and b2==9) or (b1==8 and b2==11):
+        score -= p5
+        sal1[4] += p5
+    if (b1==4 and b2==1) or (b1==11 and b2==2) or (b1==6 and b2==3) or (b1==9 and b2==6) or (b1==11 and b2==8):
+        score -= p5
+        sal1[4] += p5
+
+    # 살 5 계산 (인덱스 5에 저장) - hd5.py의 956-993 라인
+    if a3==7:
+        if a1==4 or a2==4:
+            score -= p6
+            sal0[5] += p6
+    if a3==5:
+        if a1==2 or a2==2:
+            score -= p6
+            sal0[5] += p6
+    if a3==4:
+        if a1==7 or a2==7:
+            score -= p6
+            sal0[5] += p6
+    if a3==2:
+        if a1==5 or a2==5:
+            score -= p6
+            sal0[5] += p6
+    if b3==7:
+        if b1==4 or b2==4:
+            score -= p6
+            sal1[5] += p6
+    if b3==5:
+        if b1==2 or b2==2:
+            score -= p6
+            sal1[5] += p6
+    if b3==4:
+        if b1==7 or b2==7:
+            score -= p6
+            sal1[5] += p6
+    if b3==2:
+        if b1==5 or b2==5:
+            score -= p6
+            sal1[5] += p6
+    if (a1==7 and a2==4) or (a1==5 and a2==2) or (a1==4 and a2==7) or (a1==2 and a2==5):
+        score -= p6
+        sal0[5] += p6
+    if (b1==7 and b2==4) or (b1==5 and b2==2) or (b1==4 and b2==7) or (b1==2 and b2==5):
+        score -= p6
+        sal1[5] += p6
+
+    # 살 6 계산 (인덱스 6에 저장) - hd5.py의 996-1010 라인
+    if (token0[4]==5 and a3==5) or (token0[4]==4 and a3==2) or (token0[4]==3 and a3==11) or (token0[4]==2 and a3==8) or (token0[4]==1 and a3==5) or (token0[4]==10 and a3==2) or (token0[4]==9 and a3==11):
+        if gender0==1:
+            score -= p7
+            sal0[6] += p7
+        else:
+            score -= p71
+            sal0[6] += p71
+
+    if (token1[4]==5 and b3==5) or (token1[4]==4 and b3==2) or (token1[4]==3 and b3==11) or (token1[4]==2 and b3==8) or (token1[4]==1 and b3==5) or (token1[4]==10 and b3==2) or (token1[4]==9 and b3==11):
+        if gender1==1:
+            score -= p7
+            sal1[6] += p7
+        else:
+            score -= p71
+            sal1[6] += p71
+
+    # 살 7 계산 (인덱스 7에 저장) - hd5.py의 1012-1034 라인
+    if (gender0 != 1) and ((token0[4] == 9 and a3 == 5) or (token0[4] == 5 and a3 == 11) or (token0[4] == 7 and a3 == 5) or (token0[4] == 7 and a3 == 11)):
+        score -= p81
+        sal0[7] += p81
+
+    if (gender0 != 1) and ((token0[2] == 9 and a2 == 5) or (token0[2] == 5 and a2 == 11) or (token0[2] == 7 and a2 == 5) or (token0[4] == 7 and a2 == 11)):
+        score -= p82
+        sal0[7] += p82
+
+    if (gender0 != 1) and ((token0[0] == 9 and a1 == 5) or (token0[0] == 5 and a1 == 11) or (token0[0] == 7 and a1 == 5) or (token0[0] == 7 and a1 == 11)):
+        score -= p83
+        sal0[7] += p83
+
+    if (gender1 != 1) and ((token1[4] == 9 and b3 == 5) or (token1[4] == 5 and b3 == 11) or (token1[4] == 7 and b3 == 5) or (token1[4] == 7 and b3 == 11)):
+        score -= p81
+        sal1[7] += p81
+
+    if (gender1 != 1) and ((token1[2] == 9 and b2 == 5) or (token1[2] == 5 and b2 == 11) or (token1[2] == 7 and b2 == 5) or (token1[2] == 7 and b2 == 11)):
+        score -= p82
+        sal1[7] += p82
+
+    if (gender1 != 1) and ((token1[0] == 9 and b1 == 5) or (token1[0] == 5 and b1 == 11) or (token1[0] == 7 and b1 == 5) or (token1[0] == 7 and b1 == 11)):
+        score -= p83
+        sal1[7] += p83
+
+    # 디버깅: 결과 확인
+    sal_count_after = sum(sal0) + sum(sal1)
+    print(f"DEBUG calculate 결과: score={score}, sal0={sal0}, sal1={sal1}", file=sys.stderr)
+    print(f"DEBUG 살 계산 전후: before={sal_count_before}, after={sal_count_after}", file=sys.stderr)
+    
+    # 살이 하나도 계산되지 않은 경우 경고
+    if sal_count_after == 0:
+        print(f"WARNING: 모든 살 값이 0입니다. 입력 데이터를 확인하세요: a1={a1}, a2={a2}, a3={a3}, b1={b1}, b2={b2}, b3={b3}", file=sys.stderr)
     
     return score, sal0, sal1
 
@@ -280,6 +1150,10 @@ def main():
             }))
             return
         
+        # CSV 파일 로드 (필요한 경우)
+        if not load_calendar_data():
+            print(f"경고: 절기 데이터 로드 실패 (계속 진행)", file=sys.stderr)
+        
         # TensorFlow 모델로 기본 점수 계산
         ys = calculate_sky(person0[0], person1[0])  # 년간
         ms = calculate_sky(person0[2], person1[2])  # 월간
@@ -294,6 +1168,11 @@ def main():
         
         # 살 계산 및 감점
         final_score, sal0, sal1 = calculate(person0, person1, gender0, gender1, score)
+        
+        # 디버깅: 입력 데이터와 결과 출력
+        print(f"DEBUG: person0={person0}, person1={person1}, gender0={gender0}, gender1={gender1}", file=sys.stderr)
+        print(f"DEBUG: score={score}, final_score={final_score}", file=sys.stderr)
+        print(f"DEBUG: sal0={sal0}, sal1={sal1}", file=sys.stderr)
         
         # 결과 반환
         result = {

@@ -299,7 +299,16 @@ export async function calculateCompatibility(
   const person1 = sajuToNumberArray(saju2);
   const gender0 = genderToNumber(gender1);
   const gender1_num = genderToNumber(gender2);
-  
+
+  // 디버깅: 백엔드로 전송하는 데이터 로그
+  console.log('🔍 백엔드로 전송하는 데이터:');
+  console.log('  person0 (사주1):', person0, `[년간=${person0[0]}, 년지=${person0[1]}, 월간=${person0[2]}, 월지=${person0[3]}, 일간=${person0[4]}, 일지=${person0[5]}]`);
+  console.log('  person1 (사주2):', person1, `[년간=${person1[0]}, 년지=${person1[1]}, 월간=${person1[2]}, 월지=${person1[3]}, 일간=${person1[4]}, 일지=${person1[5]}]`);
+  console.log('  gender0:', gender0, `(${gender1})`);
+  console.log('  gender1:', gender1_num, `(${gender2})`);
+  console.log('  사주1 상세:', saju1);
+  console.log('  사주2 상세:', saju2);
+
   let backendResult;
   try {
     backendResult = await compatibilityAPI.calculateCompatibility({
@@ -350,6 +359,31 @@ export async function calculateCompatibility(
     sal0: backendSal0,
     sal1: backendSal1,
   });
+  
+  // 살 값이 모두 0인 경우 상세 로그
+  const sal0Sum = backendSal0.reduce((a, b) => a + b, 0);
+  const sal1Sum = backendSal1.reduce((a, b) => a + b, 0);
+  if (sal0Sum === 0 && sal1Sum === 0) {
+    console.group('⚠️ 경고: 모든 살 값이 0입니다!');
+    console.log('입력 데이터:');
+    console.log('  person0:', person0, `→ [년간=${person0[0]}, 년지=${person0[1]}, 월간=${person0[2]}, 월지=${person0[3]}, 일간=${person0[4]}, 일지=${person0[5]}]`);
+    console.log('  person1:', person1, `→ [년간=${person1[0]}, 년지=${person1[1]}, 월간=${person1[2]}, 월지=${person1[3]}, 일간=${person1[4]}, 일지=${person1[5]}]`);
+    console.log('  gender0:', gender0, `(${gender1})`);
+    console.log('  gender1:', gender1_num, `(${gender2})`);
+    console.log('사주1:', saju1);
+    console.log('사주2:', saju2);
+    console.log('백엔드 응답:', resultData);
+    console.log('살 계산 조건 확인:');
+    const a1 = person0[1], a2 = person0[3], a3 = person0[5];
+    const b1 = person1[1], b2 = person1[3], b3 = person1[5];
+    console.log(`  person0: a1(년지)=${a1}, a2(월지)=${a2}, a3(일지)=${a3}`);
+    console.log(`  person1: b1(년지)=${b1}, b2(월지)=${b2}, b3(일지)=${b3}`);
+    console.log('  살 0 조건: a3==3이고 (a1==6 or a1==9) 또는 (a2==6 or a2==9)');
+    console.log(`    → a3==3? ${a3 === 3}, a1==6 or 9? ${a1 === 6 || a1 === 9}, a2==6 or 9? ${a2 === 6 || a2 === 9}`);
+    console.log('  살 0 조건: b3==3이고 (b1==6 or b1==9) 또는 (b2==6 or b2==9)');
+    console.log(`    → b3==3? ${b3 === 3}, b1==6 or 9? ${b1 === 6 || b1 === 9}, b2==6 or 9? ${b2 === 6 || b2 === 9}`);
+    console.groupEnd();
+  }
   
   const salResult = {
     sal0: backendSal0,

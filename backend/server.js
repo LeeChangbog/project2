@@ -8,6 +8,8 @@ const cors = require('cors');
 const { exec } = require('child_process');
 const { promisify } = require('util');
 const path = require('path');
+const fs = require('fs');
+const os = require('os');
 require('dotenv').config();
 
 // MongoDB 연결
@@ -458,6 +460,9 @@ app.post('/api/calculate-compatibility', async (req, res) => {
       gender0: gender0 === '남자' || gender0 === 'male' || gender0 === 1 ? 1 : 0,
       gender1: gender1 === '남자' || gender1 === 'male' || gender1 === 1 ? 1 : 0,
     };
+    
+    // 디버깅: 입력 데이터 로그
+    console.log('🔍 Python 스크립트 입력 데이터:', JSON.stringify(inputData, null, 2));
 
     // Python 스크립트 경로
     const pythonScriptPath = path.join(__dirname, 'calculate.py');
@@ -468,25 +473,44 @@ app.post('/api/calculate-compatibility', async (req, res) => {
     
     // Python 스크립트 실행
     try {
-      // JSON 데이터를 파일로 전달 (echo는 Windows에서 문제가 있을 수 있음)
-      const inputJson = JSON.stringify(inputData);
+      // JSON 데이터를 임시 파일로 저장하여 전달 (Windows echo 문제 해결)
+      const tmpFilePath = path.join(os.tmpdir(), `calculate-input-${Date.now()}.json`);
+      
+      // 임시 파일에 JSON 데이터 저장
+      fs.writeFileSync(tmpFilePath, JSON.stringify(inputData), 'utf8');
+      
+      // Python 스크립트 실행 (stdin으로 파일 내용 전달)
       const command = isWindows
-        ? `echo ${inputJson} | ${pythonCommand} "${pythonScriptPath}"`
-        : `echo '${inputJson}' | ${pythonCommand} "${pythonScriptPath}"`;
+        ? `type "${tmpFilePath}" | ${pythonCommand} "${pythonScriptPath}"`
+        : `cat "${tmpFilePath}" | ${pythonCommand} "${pythonScriptPath}"`;
       
       const { stdout, stderr } = await execAsync(command, {
         cwd: __dirname, // 백엔드 디렉토리에서 실행 (모델 파일 위치)
         maxBuffer: 10 * 1024 * 1024, // 10MB 버퍼
         shell: true, // Windows에서도 동작하도록
       });
+      
+      // 임시 파일 삭제
+      try {
+        fs.unlinkSync(tmpFilePath);
+      } catch (unlinkError) {
+        // 파일 삭제 실패는 무시
+      }
 
-      // stderr에 오류가 있으면 로그 출력
+      // stderr에 오류가 있으면 로그 출력 (DEBUG 메시지 포함)
       if (stderr && !stderr.includes('WARNING')) {
         console.error('⚠️ Python 스크립트 경고:', stderr);
       }
-
+      
+      // DEBUG 메시지도 로그 출력
+      if (stderr && stderr.includes('DEBUG:')) {
+        console.log('🔍 Python 디버그 정보:', stderr);
+      }
+      
       // stdout이 비어있거나 JSON 파싱 실패 시 오류 처리
       if (!stdout || !stdout.trim()) {
+        console.error('❌ Python 스크립트 출력이 비어있습니다.');
+        console.error('   stderr:', stderr);
         throw new Error('Python 스크립트가 출력을 생성하지 않았습니다.');
       }
 
@@ -503,6 +527,17 @@ app.post('/api/calculate-compatibility', async (req, res) => {
           success: false,
           message: result.error || '계산 중 오류가 발생했습니다.',
         });
+      }
+
+      // 살 값 확인 및 경고
+      const sal0 = result.data?.sal0 || [];
+      const sal1 = result.data?.sal1 || [];
+      const sal0Sum = sal0.reduce((a, b) => a + b, 0);
+      const sal1Sum = sal1.reduce((a, b) => a + b, 0);
+      
+      if (sal0Sum === 0 && sal1Sum === 0) {
+        console.warn('⚠️ 경고: 모든 살 값이 0입니다. 입력 데이터를 확인하세요.');
+        console.warn(`   입력 데이터: person0=${JSON.stringify(person0)}, person1=${JSON.stringify(person1)}, gender0=${gender0}, gender1=${gender1}`);
       }
 
       // 궁합 결과 저장 (추가 정보가 있는 경우)
