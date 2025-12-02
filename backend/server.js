@@ -34,6 +34,68 @@ app.get('/', (req, res) => {
   res.json({ message: '궁합문어 백엔드 서버가 실행 중입니다.' });
 });
 
+// Python 환경 체크 API (배포 환경 디버깅용)
+app.get('/api/check-python-env', async (req, res) => {
+  try {
+    const isWindows = process.platform === 'win32';
+    const pythonCommand = isWindows ? 'python' : 'python3';
+    const pythonScriptPath = path.join(__dirname, 'calculate.py');
+    
+    const checks = {
+      platform: process.platform,
+      pythonCommand: pythonCommand,
+      scriptPath: pythonScriptPath,
+      workingDirectory: __dirname,
+      checks: {},
+    };
+    
+    // Python 버전 확인
+    try {
+      const { stdout: pythonVersion } = await execAsync(`${pythonCommand} --version`, { shell: true });
+      checks.checks.python = { installed: true, version: pythonVersion.trim() };
+    } catch (error) {
+      checks.checks.python = { installed: false, error: error.message };
+    }
+    
+    // 필수 패키지 확인
+    const packages = ['numpy', 'tensorflow'];
+    for (const pkg of packages) {
+      try {
+        const { stdout } = await execAsync(`${pythonCommand} -c "import ${pkg}; print(${pkg}.__version__)"`, { shell: true });
+        checks.checks[pkg] = { installed: true, version: stdout.trim() };
+      } catch (error) {
+        checks.checks[pkg] = { installed: false, error: error.message };
+      }
+    }
+    
+    // 모델 파일 확인
+    const modelFiles = ['sky3000.h5', 'earth3000.h5', 'cal.csv', 'calculate.py'];
+    checks.checks.files = {};
+    modelFiles.forEach(file => {
+      const filePath = path.join(__dirname, file);
+      const exists = fs.existsSync(filePath);
+      checks.checks.files[file] = exists;
+      if (exists) {
+        const stats = fs.statSync(filePath);
+        checks.checks.files[file] = { exists: true, size: stats.size };
+      } else {
+        checks.checks.files[file] = { exists: false };
+      }
+    });
+    
+    res.json({
+      success: true,
+      data: checks,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Python 환경 체크 중 오류가 발생했습니다.',
+      error: error.message,
+    });
+  }
+});
+
 // 궁합 결과 저장 API
 app.post('/api/compatibility-result', async (req, res) => {
   try {
@@ -552,6 +614,28 @@ app.post('/api/calculate-compatibility', async (req, res) => {
     } catch (execError) {
       console.error('❌ Python 실행 오류:', execError.message);
       console.error('   상세 오류:', execError);
+      console.error('   오류 코드:', execError.code);
+      console.error('   오류 신호:', execError.signal);
+      console.error('   Python 명령어:', pythonCommand);
+      console.error('   스크립트 경로:', pythonScriptPath);
+      console.error('   작업 디렉토리:', __dirname);
+      console.error('   플랫폼:', process.platform);
+      
+      // Python 환경 체크
+      try {
+        const { stdout: pythonVersion } = await execAsync(`${pythonCommand} --version`, { shell: true });
+        console.error('   Python 버전:', pythonVersion);
+      } catch (versionError) {
+        console.error('   ⚠️ Python이 설치되어 있지 않거나 PATH에 없습니다.');
+      }
+      
+      // 모델 파일 존재 확인
+      const modelFiles = ['sky3000.h5', 'earth3000.h5', 'cal.csv'];
+      modelFiles.forEach(file => {
+        const filePath = path.join(__dirname, file);
+        const exists = fs.existsSync(filePath);
+        console.error(`   ${file}: ${exists ? '✅ 존재' : '❌ 없음'}`);
+      });
       
       // Python이 설치되지 않았거나 모델 파일이 없는 경우 기본값 반환
       // 하지만 오류 정보를 포함하여 반환
@@ -564,6 +648,8 @@ app.post('/api/calculate-compatibility', async (req, res) => {
           sal1: [0, 0, 0, 0, 0, 0, 0, 0],
           fallback: true, // 기본값 사용 표시
           error: execError.message, // 오류 메시지 포함
+          errorCode: execError.code,
+          errorSignal: execError.signal,
         },
       });
     }
